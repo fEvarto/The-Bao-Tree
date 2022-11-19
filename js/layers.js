@@ -554,7 +554,7 @@ addLayer("a", {
             }
         },
         13: {
-            name: "Back to the fit",
+            name: "On the track",
             tooltip: "Get 10000 bao",
             done(){
                 return player.points >= 10000 ? 1 : 0
