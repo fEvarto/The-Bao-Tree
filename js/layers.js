@@ -457,3 +457,152 @@ addLayer("p", {
         },
     },
 })
+
+//UP - PRESTIGE, DOWN - JINGU
+
+addLayer("j", {
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: false,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+    }},
+
+    color: "#ff4400",                       // The color for this layer, which affects many elements.
+    resource: "jingu mastery",            // The name of this layer's main prestige resource.
+    row: 1,                                 // The row this layer is on (0 is the first row).
+
+    baseResource: "bao",                 // The name of the resource your prestige gain is based on.
+    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
+
+    requires: new Decimal(1e22),              // The amount of the base needed to  gain 1 of the prestige currency.
+                                            // Also the amount required to unlock the layer.
+
+    type: "static",                         // Determines the formula used for calculating prestige currency.
+    exponent: 0.3,                          // "normal" prestige gain is (currency^exponent).
+
+    effect(){
+        return Math.pow(1.3, player['j'].points)
+    },
+    effectDescription(){
+        return "which multiplies bao gain by " + format(tmp['j'].effect)
+    },
+
+    gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
+        return new Decimal(1)               // Factor in any bonuses multiplying gain here.
+    },
+    gainExp() {                             // Returns the exponent to your gain of the prestige resource.
+        return new Decimal(1)
+    },
+
+    layerShown() { return hasUpgrade('p', 45) && player.points >= 1e100 },          // Returns a bool for if this layer's node should be visible in the tree.
+
+    upgrades: {
+        // Look in the upgrades docs to see what goes here!
+    },
+})
+
+//UP - JINGU, DOWN - ACHIEVEMENTS
+
+addLayer("a", {
+    startData() { return {                  // startData is a function that returns default data for a layer. 
+        unlocked: true,                     // You can add more variables here to add them to your layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+    }},
+
+    color: "#f5de18",                       // The color for this layer, which affects many elements.
+    resource: "unlocked achievements",            // The name of this layer's main prestige resource.
+    row: "side",                                 // The row this layer is on (0 is the first row).
+            // The amount of the base needed to  gain 1 of the prestige currency.
+                                            // Also the amount required to unlock the layer.
+    type: "none",                         // Determines the formula used for calculating prestige currency.                          // "normal" prestige gain is (currency^exponent).
+
+    gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
+        return new Decimal(1)               // Factor in any bonuses multiplying gain here.
+    },
+    gainExp() {                             // Returns the exponent to your gain of the prestige resource.
+        return new Decimal(1)
+    },
+    effect(){
+        let eff
+        eff = Math.pow(1.03, player[this.layer].points)
+        return eff
+    },
+    effectDescription(){
+        return "which multiplies bao gain by " + format(tmp['a'].effect)
+    },
+
+    layerShown() { return true },          // Returns a bool for if this layer's node should be visible in the tree.
+
+    achievements: {
+        11: {
+            name: "The story starts...",
+            tooltip: "Buy your first upgrade",
+            done(){
+                return hasUpgrade('p', 11)
+            },
+            onComplete(){
+                player["a"].points = player["a"].points.add(1)
+            }
+        },
+        12: {
+            name: "Back to the fit",
+            tooltip: "Unlock your first buyable",
+            done(){
+                return hasUpgrade('p', 15)
+            },
+            onComplete(){
+                player["a"].points = player["a"].points.add(1)
+            }
+        },
+        13: {
+            name: "Back to the fit",
+            tooltip: "Get 10000 bao",
+            done(){
+                return player.points >= 10000 ? 1 : 0
+            },
+            onComplete(){
+                player["a"].points = player["a"].points.add(1)
+            }
+        },
+        14: {
+            name: "Solo",
+            tooltip: "Buy (2,5) upgrade",
+            done(){
+                return hasUpgrade('p', 25)
+            },
+            onComplete(){
+                player["a"].points = player["a"].points.add(1)
+            }
+        },
+        15: {
+            name: "Conjuring your weaknesses",
+            tooltip: "Get rid of depend of bao in (2,4)",
+            done(){
+                return hasUpgrade('p', 33)
+            },
+            onComplete(){
+                player["a"].points = player["a"].points.add(1)
+            }
+        },
+        16: {
+            name: "Sixth",
+            tooltip: "Increase (2,1) effect to 3",
+            done(){
+                return tmp['p'].upgrades[21].effect >= 3 ? 1 : 0
+            },
+            onComplete(){
+                player["a"].points = player["a"].points.add(1)
+            }
+        },
+        17: {
+            name: "New mastery",
+            tooltip: "Unlock second layer (now WIP)",
+            done(){
+                return hasUpgrade('p', 45)
+            },
+            onComplete(){
+                player["a"].points = player["a"].points.add(1)
+            }
+        },
+    },
+})
+

@@ -13,13 +13,17 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.0.1",
-	name: "Welcome!",
+	num: "0.0.2",
+	name: "Welcome under QoL",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
 	<h3>v0.0.1: Welcome!</h3><br>
-		- Mod launched`
+		- Mod launched <br>
+	<h3>v0.0.2: Welcome under QoL</h3><br>
+		- Achievements layer. Hell Yeah <br>
+		- QoL changes (some upgrades' description changed)
+		- Rebalancing`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
@@ -48,6 +52,7 @@ function getPointGen() {
 	if (hasUpgrade('p', 22)) {gain = gain.times(upgradeEffect('p', 22))}
 	if (hasUpgrade('p', 24)) {gain = gain.times(upgradeEffect('p', 24))}
 	if (hasUpgrade('p', 25)) {gain = gain.times(upgradeEffect('p', 25))}
+	gain = gain.times(tmp['a'].effect)
 	if (hasUpgrade('p', 43)) {gain = gain.pow(upgradeEffect('p', 43))}
 	return gain
 }
