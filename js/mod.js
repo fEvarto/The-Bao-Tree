@@ -20,7 +20,6 @@ let VERSION = {
 let changelog = `<h1>Changelog:</h1><br>
 	<h2>v0.1.1: Jingu Pantheon</h2><br>
 		- Jingu layer rework - now most jingu effects depends on current jingu <br>
-		- Second achievements row have been finished <br>
 		- Jingu layer became larger<br>
 	<h3>What's new in layer</h3><br>
 		- 1 challenge<br>
