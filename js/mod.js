@@ -18,23 +18,19 @@ let VERSION = {
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h2>v0.1: Jingu Mastery</h2><br>
-		- Part of second achievements row <br>
-		- A whole new layer! Yeah<br>
-	<h3>What does it contain?</h3><br>
-		- 5 milestones<br>
-		- 3 upgrades<br>
-		<br>
-	<h3>Rebalancing and bug fixes</h3><br>
-		- Fixed bug when (4,1) effect worked on upgrades in his row without buying upgrade<br>
-		- Second buyable: base scaling became better<br>
-		- Third buyable: doubled based effect<br>
-		- (1,4): now adds 0.25 to (1,1) base<br>
-		- (2,3): (1,1) base was reduced: +2 -> +1.5<br>
-		- (4,2): 3rd buyable multiplier: x2 -> x1.5, 2nd buyable scaling: ~40% -> ~50%<br>
-		- (4,4): no longer affects (2,2) and (2,5), adds 1 -> 2 to mult<br>
-	<h3>Beta: Discord server</h3><br>
-	<h3>Current endgame: 8 jingu, ~e30 bao, ~e25 PP</h3>`
+	<h2>v0.1.1: Jingu Pantheon</h2><br>
+		- Jingu layer rework - now most jingu effects depends on current jingu <br>
+		- Second achievements row have been finished <br>
+		- Jingu layer became larger<br>
+	<h3>What's new in layer</h3><br>
+		- 1 challenge<br>
+		- 2 upgrades<br>
+		- 2 milestones<br>
+	<h3>Balance changes</h3><br>
+		- Jingu milestone 1: now boosts second buyable based on current jingu, effect x1.2 -> x1.1<br>
+		- Jingu milestone 4: now automatically gains PP based on current jingu<br>
+		- Jingu upgrade (1, 2): now boosts jingu gain based on current jingu, effect x1.5 -> x1.1<br>
+	<h3>Current endgame: 12 jingu, ~e40 bao</h3>`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 

@@ -29,7 +29,7 @@ addLayer("p", {
         return new Decimal(1)
     },
     passiveGeneration(){
-        let perc = 0.05
+        let perc = 0.05 * player['j'].points
         if (hasMilestone('j', 3)){return perc}
     },
     row: 0, // Row the layer is in on the tree (0 is the first row)
@@ -45,6 +45,7 @@ addLayer("p", {
             },
             cost: new Decimal(1),
             effect(){
+                if (!inChallenge('j', 11)){
                 let gainAdd = 0, gainBase = 1
                 if (hasUpgrade("p", 14)) {gainBase += tmp[this.layer].upgrades[14].effect.second}
                 if (hasUpgrade("p", 23)) {gainBase += tmp[this.layer].upgrades[23].effect.second}
@@ -60,6 +61,8 @@ addLayer("p", {
                 if (hasUpgrade("p", 13)) {gainAdd *= tmp[this.layer].upgrades[13].effect.second}
                 if (hasUpgrade("p", 32)) {gainAdd *= tmp[this.layer].upgrades[32].effect.first}
                 return gainAdd
+                }
+                else {return 1}
             },
             effectDisplay() { return "+" + format(this.effect()) }
         },
@@ -105,7 +108,7 @@ addLayer("p", {
         },
         21: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Hexagon",
@@ -126,7 +129,7 @@ addLayer("p", {
         },
         22: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Hept-up",
@@ -142,7 +145,7 @@ addLayer("p", {
         },
         23: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Fight in octagon",
@@ -157,7 +160,7 @@ addLayer("p", {
         },
         24: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Leon Kirilin",
@@ -176,7 +179,7 @@ addLayer("p", {
         },
         25: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Ten eSportsmen",
@@ -189,7 +192,7 @@ addLayer("p", {
         },
         31: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Experiment 011",
@@ -210,7 +213,7 @@ addLayer("p", {
         },
         32: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "The Twentieth Slave",
@@ -220,14 +223,18 @@ addLayer("p", {
                 let eff = {}
                 eff.first = 1.5
                 if((Math.log(player[this.layer].points) / Math.log(5)) <= 1) {eff.second = 1}
-                else {eff.second = Math.log(player[this.layer].points) / Math.log(2)}
+                else {
+                    let max = 2 * challengeCompletions('j', 11);
+                    if (player['j'].points < max) {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2, player['j'].points)}
+                    else {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2, max)}
+                }
                 return eff;
             },
             effectDisplay() { return format(tmp[this.layer].upgrades[32].effect.second) }
         },
         33: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Unknown thirteenth",
@@ -241,7 +248,7 @@ addLayer("p", {
         },
         34: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Prestige tr14l",
@@ -256,7 +263,7 @@ addLayer("p", {
         },
         35: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "F15herman",
@@ -268,7 +275,7 @@ addLayer("p", {
         },
         41: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "x = 16",
@@ -285,7 +292,7 @@ addLayer("p", {
         },
         42: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "Chance of applying - 17%",
@@ -300,7 +307,7 @@ addLayer("p", {
         },
         43: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "18 causes to rob the bank",
@@ -312,7 +319,7 @@ addLayer("p", {
         },
         44: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "19? Yes",
@@ -324,7 +331,7 @@ addLayer("p", {
         },
         45: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 5)) {return true}
                 else {return false}
             },
             title: "DLC is 20$",
@@ -369,9 +376,13 @@ addLayer("p", {
                 player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost) // This is a built-in system that you can use for respeccing but it only works with a single Decimal value
             },
             purchaseLimit(){
-                let gain = 100
+                let gain = 100, max = 25
                 if (hasUpgrade('p', 35)) {gain += upgradeEffect('p', 35)}
                 if (hasUpgrade('p', 41)) {gain += upgradeEffect('p', 41)}
+                if (hasMilestone('j', 5)) {
+                    if (player['j'].points < max) {gain += 2 * player['j'].points}
+                    else {gain += 2 * max}
+                }
                 return gain
             },
         },
@@ -391,7 +402,7 @@ addLayer("p", {
                 let eff, coeff1 = 1.3
                 if (hasUpgrade('p', 42)) {coeff1 += tmp[this.layer].upgrades[42].effect.second}
                 eff = Math.pow(0.5 * x, coeff1) + 1 * x
-                if (hasMilestone("j", 0)) {eff *= 1.2};
+                if (hasMilestone("j", 0)) {eff *= Math.pow(1.1, player['j'].points)};
                 return eff;
             },
             display() { // Everything else displayed in the buyable button after the title
@@ -410,9 +421,13 @@ addLayer("p", {
                 player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost) // This is a built-in system that you can use for respeccing but it only works with a single Decimal value
             },
             purchaseLimit(){
-                gain = 100
+                gain = 100, max = 25
                 if (hasUpgrade('p', 35)) {gain += upgradeEffect('p', 35)}
                 if (hasUpgrade('p', 41)) {gain += upgradeEffect('p', 41)}
+                if (hasMilestone('j', 5)) {
+                    if (player['j'].points < max) {gain += 2 * player['j'].points}
+                    else {gain += 2 * max}
+                }
                 return gain
             },
         },
@@ -431,7 +446,8 @@ addLayer("p", {
             effect(x) { // Effects of owning x of the items, x is a decimal
                 let eff; let coeff1 = 1
                 if (hasUpgrade('p', 42)) {coeff1 *= tmp[this.layer].upgrades[42].effect.first}
-                eff = 1 + (0.02 * coeff1 * x)
+                if (!hasUpgrade('j',15)){eff = 1 + (0.02 * coeff1 * x)}
+                else {eff = 1 + (((0.02 + (upgradeEffect('j',15)*player['j'].points)) * coeff1 * x))}
                 return eff;
             },
             display() { // Everything else displayed in the buyable button after the title
@@ -450,9 +466,13 @@ addLayer("p", {
                 player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost) // This is a built-in system that you can use for respeccing but it only works with a single Decimal value
             },
             purchaseLimit(){
-                gain = 100
+                gain = 100, max = 25
                 if (hasUpgrade('p', 35)) {gain += upgradeEffect('p', 35)}
                 if (hasUpgrade('p', 41)) {gain += upgradeEffect('p', 41)}
+                if (hasMilestone('j', 5)) {
+                    if (player['j'].points < max) {gain += 2 * player['j'].points}
+                    else {gain += 2 * max}
+                }
                 return gain
             },
         },
@@ -462,6 +482,7 @@ addLayer("p", {
 //UP - PRESTIGE, DOWN - JINGU
 
 addLayer("j", {
+    
     startData() { return {                  // startData is a function that returns default data for a layer. 
         unlocked: false,                     // You can add more variables here to add them to your layer.
         points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
@@ -485,7 +506,12 @@ addLayer("j", {
     },                          
 
     effect(){
-        return Math.pow(1.3, player['j'].points)
+        let max = 10, current = player['j'].points
+        if (current >= max) {current = max}
+        if (!hasUpgrade('j', 14)){return Math.pow(1.3, player['j'].points)}
+        else{
+            return Math.pow(1.3 + (upgradeEffect('j', 14) * current), player['j'].points)
+        }
     },
     effectDescription(){
         return "which multiplies bao gain by " + format(tmp['j'].effect)
@@ -501,11 +527,10 @@ addLayer("j", {
     },
 
     layerShown() { return hasUpgrade('p', 45) || player["j"].points >= 1 },          // Returns a bool for if this layer's node should be visible in the tree.
-
     milestones: {
         0: {
             requirementDescription: "1 jingu mastery",
-            effectDescription: "x1.2 second buyable effect",
+            effectDescription: "x1.1 second buyable effect per every jingu you have (uncapped)",
             done() { return player["j"].points >= 1 },
         },
         1: {
@@ -521,14 +546,26 @@ addLayer("j", {
         3: {
             unlocked(){ return hasMilestone('j',2)},
             requirementDescription: "6 jingu masteries",
-            effectDescription: "Gain 5% of prestige point gain every second",
+            effectDescription: "Gain 5% of prestige point gain every second per every jingu you have",
             done() { return player["j"].points >= 6 },
         },
         4: {
             unlocked(){ return hasMilestone('j',2)},
             requirementDescription: "8 jingu masteries",
-            effectDescription: "Unlock a first jingu challenge (WIP)",
+            effectDescription: "Unlock a first jingu challenge",
             done() { return player["j"].points >= 8 },
+        },
+        5: {
+            unlocked(){ return hasMilestone('j',2)},
+            requirementDescription: "10 jingu masteries",
+            effectDescription: "Makes PP upgrades always visible. Increases cap of PP buyables by 2 per every jingu you have (caps at 25 jingu)",
+            done() { return player["j"].points >= 10 },
+        },
+        6: {
+            unlocked(){ return hasMilestone('j',2)},
+            requirementDescription: "12 jingu masteries",
+            effectDescription: "Unlock a second jingu challenge. Increases ??? effect per every jingu you have (both WIP)",
+            done() { return player["j"].points >= 12 },
         },
     },
     upgrades:{
@@ -539,9 +576,9 @@ addLayer("j", {
             effect(){
                 let eff = {}, base = 10, max = 10, current = player['j'].points
                 if (hasUpgrade('j',13)) {base += upgradeEffect('j', 13)}
-                eff.first = Math.pow(base, player['j'].points)
-                eff.second = Math.pow(Decimal.sqrt(base), player['j'].points)
-                if (player['j'].points >= max) {current = max}
+                if (current >= max) {current = max}
+                eff.first = Math.pow(base, current)
+                eff.second = Math.pow(Decimal.sqrt(base), current)
                 return eff;
             },
             effectDisplay() { 
@@ -552,14 +589,17 @@ addLayer("j", {
         12: {
             unlocked(){ return hasMilestone('j',2)},
             title: "Forbidden techniques",
-            description: "/1e2 jingu requirements, x1.5 jingu gain",
+            description: "/1e2 jingu requirements, x1.1 jingu gain per every jingu you have",
             cost: new Decimal(4),
             effect(){
                 let eff = {}
                 eff.first = 1e2
-                eff.second = 1.5
+                eff.second = Math.pow(1.1, player['j'].points)
                 return eff;
             },
+            effectDisplay(){
+                return "x" + format(tmp['j'].upgrades[12].effect.second)
+            }
         },
         13: {
             unlocked(){ return hasMilestone('j',2)},
@@ -569,6 +609,45 @@ addLayer("j", {
             effect(){
                 return 2;
             },
+        },
+        14: {
+            unlocked(){ return hasMilestone('j',2)},
+            title: "Fever",
+            description: "Increases jingu effect base by 0.07 per every jingu you have (caps at 10 jingu)",
+            cost: new Decimal(9),
+            effect(){
+                return 0.07;
+            },
+        },
+        15: {
+            unlocked(){ return hasMilestone('j',2)},
+            title: "Higher to soar - harder to fall",
+            description: "Increases third PP buyable base by 1% per every jingu you have",
+            cost: new Decimal(11),
+            effect(){
+                return 0.01;
+            },
+        },
+    },
+    challenges:{
+        11: {
+            unlocked(){
+                return hasMilestone('j', 4)
+            },
+            name: "Dry start",
+            challengeDescription() {return ("PP upgrade (1,1) base equal to 1\n\ Completions: " + challengeCompletions('j',11) + "/" + this.completionLimit())},
+            rewardDescription(){
+                return "x2 to second effect of PP upgrade (3,2) per every jingu you have (caps at " + this.onComplete() + " jingu)"
+            },
+            goalDescription(){return format(1e20 * Math.pow(100, challengeCompletions('j', 11))) + " bao"},
+            canComplete(){
+               return player.points.gte(1e20 * Math.pow(100, challengeCompletions('j', 11)))
+            },
+            onComplete(){return (2 * challengeCompletions('j', 11))},
+            completionLimit(){
+                let eff = 10;
+                return eff;
+            }
         },
     }
 }
