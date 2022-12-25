@@ -14,22 +14,23 @@ let modInfo = {
 // Set your version in num and name
 let VERSION = {
 	num: "0.1: Jingu Mastery",
-	name: "Jingu Mastery",
+	name: "",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h2>v0.1.1: Jingu Pantheon</h2><br>
-		- Jingu layer rework - now most jingu effects depends on current jingu <br>
+	<h2>v0.1.2: Jingu Pantheon, pt. II</h2><br>
+		- Many CSS styles have been changed and shrinked for effective using of space <br>
+		- Many achievements have been added <br>
 		- Jingu layer became larger<br>
 	<h3>What's new in layer</h3><br>
 		- 1 challenge<br>
 		- 2 upgrades<br>
 		- 2 milestones<br>
-	<h3>Balance changes</h3><br>
-		- Jingu milestone 1: now boosts second buyable based on current jingu, effect x1.2 -> x1.1<br>
-		- Jingu milestone 4: now automatically gains PP based on current jingu<br>
-		- Jingu upgrade (1, 2): now boosts jingu gain based on current jingu, effect x1.5 -> x1.1<br>
-	<h3>Current endgame: 12 jingu, ~e40 bao</h3>`
+	<h3>Balance changes and bugfixes</h3><br>
+		- Fixed bug with early endgame message
+		- Jingu upgrade (1,3): bao gain coefficient: sqrt(base) -> base/3
+		- Jingu upgrade (1,5): REWORKED: now increases PP upgrade (4,4) effect based on current jingu<br>
+	<h3>Current endgame: 17 jingu, ~e62 bao</h3>`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
@@ -75,7 +76,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return (player.points.gte(new Decimal("1e30")))
+	return (player.points.gte(new Decimal("1e62")))
 }
 
 
