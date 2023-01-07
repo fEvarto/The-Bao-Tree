@@ -18,19 +18,22 @@ let VERSION = {
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h2>v0.1.2: Jingu Pantheon, pt. II</h2><br>
-		- Many CSS styles have been changed and shrinked for effective using of space <br>
-		- Many achievements have been added <br>
+	<h2>v0.1.3: Jingu Pantheon, pt. III</h2><br>
+		- Last Jingu Pantheon upgrade before brand new layer <br>
+		- Much QoL changes <br>
 		- Jingu layer became larger<br>
 	<h3>What's new in layer</h3><br>
-		- 1 challenge<br>
-		- 2 upgrades<br>
+		- 2 challenges<br>
+		- 3 upgrades<br>
 		- 2 milestones<br>
 	<h3>Balance changes and bugfixes</h3><br>
-		- Fixed bug with early endgame message
-		- Jingu upgrade (1,3): bao gain coefficient: sqrt(base) -> base/3
-		- Jingu upgrade (1,5): REWORKED: now increases PP upgrade (4,4) effect based on current jingu<br>
-	<h3>Current endgame: 17 jingu, ~e62 bao</h3>`
+		- Fixed bug with fourth buyable visibility <br>
+		- Achievement "Lucky man" deleted due to bugs <br>
+		- Jingu layer: now has base cap at 20 jingu <br>
+		- Jingu milestone 5: now makes PP upgrades (one milestone earlier) and buyables visible(QoL)<br>
+		- Jingu milestone 6: no longer makes upgrades visible, now autobuys PP buyables instead(QoL)<br>
+		- Jingu challenge 2: jingu cap: 1 -> 1.5 per completion (rounded down) <br>
+	<h3>Current endgame: 22 jingu, ~e84 bao</h3>`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
@@ -62,6 +65,7 @@ function getPointGen() {
 	gain = gain.times(tmp['a'].effect)
 	gain = gain.times(tmp['j'].effect)
 	if(hasUpgrade('j',13)) {gain = gain.times(tmp['j'].upgrades[11].effect.second)}
+	if(hasUpgrade('j',24)) {gain = gain.pow(tmp['j'].upgrades[24].effect.second)}
 	if (hasUpgrade('p', 43)) {gain = gain.pow(upgradeEffect('p', 43))}
 	return gain
 }
@@ -76,7 +80,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return (player.points.gte(new Decimal("1e62")))
+	return (player.points.gte(new Decimal("1e84")))
 }
 
 
