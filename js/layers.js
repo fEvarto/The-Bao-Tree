@@ -90,6 +90,7 @@ addLayer("p", {
                 let eff = 2, max = 20, current = player['j'].points
                 if (current >= max) {current = max}
                 if (hasMilestone('j', 7)){eff = 2 * Math.pow(1.5, current)}
+                if (hasUpgrade('TC', 12)) {eff *= upgradeEffect('TC',12)}
                 return eff;
             },
             effectDisplay(){
@@ -98,11 +99,11 @@ addLayer("p", {
         },
         13: {
             title: "Triplet",
-            description: "+15% prestige point gain, x1.5 effect of 'You gonna start somewhere'",
+            description: "+33% prestige point gain, x1.5 effect of 'You gonna start somewhere'",
             cost: new Decimal(18),
             effect(){
                 let mult = {}
-                mult.first = 1.15
+                mult.first = 1.33
                 mult.second = 1.5
                 return mult;
             } 
@@ -137,7 +138,7 @@ addLayer("p", {
             description: "Each upgrade in this row additively increases prestige point gain",
             cost: new Decimal(100),
             effect(){
-                let gainAdd = 1, gainBase = 0.08
+                let gainAdd = 1, gainBase = 0.1
                 if (hasUpgrade("p", 31)) {gainBase *= tmp[this.layer].upgrades[31].effect.second}
                 if (hasUpgrade("p", 21)) {gainAdd += gainBase}
                 if (hasUpgrade("p", 22)) {gainAdd += gainBase}
@@ -158,9 +159,12 @@ addLayer("p", {
             description: "Bao gain is increased based on current bao",
             cost: new Decimal(150),
             effect(){
-                let gainbase, scale = 10
-                if((Math.log(player.points) / Math.log(scale)) <= 1) {gainbase = 1}
-                else {gainbase = Math.log(player.points) / Math.log(scale)}
+                let gainbase, scale = 12, base = 1
+                if (hasUpgrade('p',45)) {scale -= upgradeEffect('p',45)}
+                if((Math.log(player.points) / Math.log(scale)) <= 1) {gainbase = 1 + base}
+                else {gainbase = (Math.log(player.points) / Math.log(scale)) + base}
+                if (hasMilestone('j',6)){gainbase *= Math.pow(1.01, player['j'].points)}
+                if (hasUpgrade('TC',13)){gainbase *= upgradeEffect('TC', 13)}
                 return gainbase
             },
             effectDisplay() { return format(this.effect()) + "x" }
@@ -176,7 +180,7 @@ addLayer("p", {
             effect(){
                 let mult = {}
                 mult.first = 0.01
-                mult.second = 2
+                mult.second = 1.5
                 return mult;
             },
         },
@@ -228,7 +232,7 @@ addLayer("p", {
                 if (hasUpgrade('p', 33)) {eff.first += 0.2}
                 if (hasUpgrade('p', 34)) {eff.first += 0.2}
                 if (hasUpgrade('p', 35)) {eff.first += 0.2}
-                eff.second = 2.5
+                eff.second = 2
                 return eff;
             },
             effectDisplay() { return "-" + format(tmp[this.layer].upgrades[31].effect.first) }
@@ -247,8 +251,13 @@ addLayer("p", {
                 if((Math.log(player[this.layer].points) / Math.log(5)) <= 1) {eff.second = 1}
                 else {
                     let max = 2 * challengeCompletions('j', 11);
+                    if (!hasUpgrade('TC',14)){
                     if (player['j'].points < max) {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2, player['j'].points)}
-                    else {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2, max)}
+                    else {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2, max)}}
+                    else{
+                        if (player['j'].points < max) {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2 + upgradeEffect('TC',14), player['j'].points)}
+                        else {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2 + upgradeEffect('TC',14), max)}
+                    }
                 }
                 return eff;
             },
@@ -361,10 +370,10 @@ addLayer("p", {
                 else {return false}
             },
             title: "DLC is 20$",
-            description: "Unlocks new layer",
+            description: "Reduces 'Hept-up' logarithm scaling base. Unlocks new layer",
             cost: new Decimal(5e11),
             effect(){
-                return 1e4;
+                return 2;
             }
         },
     },
@@ -477,8 +486,7 @@ addLayer("p", {
             },
             title: "Find out your hidden bao", // Optional, displayed at the top in a larger font
             cost(x) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                let baseCost = 1e7, baseCoeff = new Decimal(1.25)
-                if (hasMilestone('j', 1)) {baseCoeff -= 0.05}
+                let baseCost = 1e7, baseCoeff = new Decimal(1.2)
                 if (inChallenge('j',21)) {baseCoeff *= 2} 
                 let cost = new Decimal(baseCost * Math.pow(baseCoeff, x))
                 return cost
@@ -487,7 +495,7 @@ addLayer("p", {
                 if (!inChallenge('j',12)){
                 let eff; let coeff1 = 1
                 if (hasUpgrade('p', 42)) {coeff1 *= tmp[this.layer].upgrades[42].effect.first}
-                if (!hasMilestone('j',6)){eff = 1 + (0.02 * coeff1 * x)}
+                if (!hasMilestone('j',1)){eff = 1 + (0.02 * coeff1 * x)}
                 else {eff = 1 + (((0.02 + (0.005 * player['j'].points)) * coeff1 * x))}
                 if (eff != 1) {eff *= buyableEffect("p", 14);}
                 return eff;
@@ -533,12 +541,15 @@ addLayer("p", {
                 return cost
             },
             effect(x) { // Effects of owning x of the items, x is a decimal
+                if (!hasUpgrade('TC',22)){max = Math.floor(1.5 * challengeCompletions('j', 21))}
+                else {max = Math.floor(1.5 * challengeCompletions('j', 21) * upgradeEffect('TC',22))}
                 if (!inChallenge('j',12)){
-                    max = Math.floor(1.5 * challengeCompletions('j', 21)), current = player['j'].points
+                    current = player['j'].points
                     if (current >= max) {current = max}
                     let eff, gainBase = 1.02
                     gainBase += (0.001 * current)
                     eff = Decimal.pow(gainBase, x)
+                    if (hasUpgrade('TC',24))(eff = Math.pow(eff, upgradeEffect('TC', 24)))
                     return eff
                     }
                     else {return 1}
@@ -606,7 +617,9 @@ addLayer("j", {
         if (current >= max) {current = max}
         if (!hasUpgrade('j', 14)){return Math.pow(1.3, player['j'].points)}
         else{
-            return Math.pow(1.3 + (upgradeEffect('j', 14) * current3), player['j'].points)
+            if (!hasUpgrade('TC',23)){
+            return Math.pow(1.3 + (upgradeEffect('j', 14) * current3), player['j'].points)}
+            else {return Math.pow(1.3 + (upgradeEffect('j', 14) * current3), player['j'].points) * upgradeEffect('TC',23)}
         }
     },
     effectDescription(){
@@ -634,7 +647,7 @@ addLayer("j", {
         },
         1: {
             requirementDescription: "2 jingu masteries",
-            effectDescription: "Reduces 'Find out your hidden bao' cost scaling",
+            effectDescription: "Increases 'Find out your hidden bao' base by 0.5% per every jingu you have",
             done() { return player["j"].points >= 2 },
         },
         2: {
@@ -657,13 +670,13 @@ addLayer("j", {
         5: {
             unlocked(){ return hasMilestone('j',2)},
             requirementDescription: "10 jingu masteries",
-            effectDescription: "Autobuys PP buyables. Increases cap of PP buyables by 2 per every jingu you have (caps at 25)",
+            effectDescription: "Autobuys PP buyables (autobuyer considers cost as requirement). Increases cap of PP buyables by 2 per every jingu you have (caps at 25)",
             done() { return player["j"].points >= 10 },
         },
         6: {
             unlocked(){ return hasMilestone('j',2)},
             requirementDescription: "12 jingu masteries",
-            effectDescription: "Unlock a second jingu challenge. Increases 'Find out your hidden bao' base by 0.5% effect per every jingu you have",
+            effectDescription: "Unlock a second jingu challenge. Multiplies 'Hept-up' effect by 1.01 per every jingu you have (compounding)",
             done() { return player["j"].points >= 12 },
         },
         7: {
@@ -675,13 +688,13 @@ addLayer("j", {
         8: {
             unlocked(){ return hasMilestone('j',7)},
             requirementDescription: "15 jingu masteries",
-            effectDescription: "Increases cap of 'New mastery' by 1 per every jingu above 12 you have (max at 22)",
+            effectDescription: "Increases cap of 'New mastery' by 1 per every jingu you have (max at 10)",
             done() { return player["j"].points >= 15 },
         },
         9: {
             unlocked(){ return hasMilestone('j',7)},
             requirementDescription: "17 jingu masteries",
-            effectDescription: "+1 'Fever' cap per every jingu above 10 you have (max at 27). +0.03 to 'Fever' base",
+            effectDescription: "+1 'Fever' cap per every jingu above 10 you have (max at 27). +0.03 to 'Fever' base. Unlocks third jingu challenge",
             done() { return player["j"].points >= 17 },
         },
         11: {
@@ -689,6 +702,12 @@ addLayer("j", {
             requirementDescription: "20 jingu masteries",
             effectDescription: "Autobuys all PP upgrades. Doubles buyable autobuy speed",
             done() { return player["j"].points >= 20 },
+        },
+        12: {
+            unlocked(){ return player["j"].points >= 24},
+            requirementDescription: "24 jingu masteries and 11 tiger claws",
+            effectDescription: "Unlocks fifth jingu challenge",
+            done() { return (player["j"].points >= 24 && player['TC'].points >= 11) },
         },
     },
     upgrades:{
@@ -724,6 +743,7 @@ addLayer("j", {
                 eff.first = 1e2
                 eff.second = Math.pow(1.1, player['j'].points)
                 if (hasUpgrade('j',23)) {eff.second = Math.pow(Math.pow(1.1,player['j'].points), upgradeEffect('j',23))}
+                if (hasUpgrade('TC',15)) {eff.second *= upgradeEffect('TC',15)}
                 return eff;
             },
             effectDisplay(){
@@ -756,7 +776,7 @@ addLayer("j", {
             description: "Increases '19? Yes' effect per every jingu you have",
             cost: new Decimal(11),
             effect(){
-                let eff = 1, max = 20, current = player['j'].points
+                let eff = 1, max = 16, current = player['j'].points
                 if (current >= max) {current = max}
                 if (hasUpgrade('j', 22)) {eff += upgradeEffect('j', 22) * current}
                 return eff;
@@ -782,10 +802,10 @@ addLayer("j", {
         22: {
             unlocked(){ return hasMilestone('j',7)},
             title: "Afraid of heights",
-            description: "Increases '19? Yes' effect by 0.2 per every jingu you have (caps at 20 jingu)",
+            description: "Increases 'Higher to soar...' effect by 0.25 per every jingu you have (caps at 16 jingu)",
             cost: new Decimal(14),
             effect(){
-                return 0.2;
+                return 0.25;
             },
         },
         23: {
@@ -815,7 +835,7 @@ addLayer("j", {
         25: {
             unlocked(){ return hasUpgrade('j',24)},
             title: "What is this?",
-            description: "Unlocks new layer (WIP)",
+            description: "Unlocks new layer",
             cost: new Decimal(22),
             effect(){
                 return 0;
@@ -830,7 +850,12 @@ addLayer("j", {
             name: "Dry start",
             challengeDescription() {return ("PP upgrade (1,1) base equal to 1\n\ Completions: " + challengeCompletions('j',11) + "/" + this.completionLimit())},
             rewardDescription(){
-                return "x2 to second effect of 'The Twentieth Slave' per every jingu you have (caps at " + this.onComplete() + " jingu)"
+                if (hasUpgrade('TC',14)){
+                return "x" + format (2 + upgradeEffect('TC',14)) + " to second effect of 'The Twentieth Slave' per every jingu you have (caps at " + this.onComplete() + " jingu)"
+                }
+                else{
+                    return "x2 to second effect of 'The Twentieth Slave' per every jingu you have (caps at " + this.onComplete() + " jingu)"
+                    }
             },
             goalDescription(){return format(1e20 * Math.pow(100, challengeCompletions('j', 11))) + " bao"},
             canComplete(){
@@ -893,7 +918,29 @@ addLayer("j", {
             canComplete(){
                return player.points.gte(1e50 * Math.pow(1e5, challengeCompletions('j', 21)))
             },
-            onComplete(){return Math.floor(1.5 * challengeCompletions('j', 21))},
+            onComplete(){
+                if (hasUpgrade('TC',22)){ return Math.floor(1.5 * challengeCompletions('j', 21) * upgradeEffect('TC',22))}
+                else{ return Math.floor(1.5 * challengeCompletions('j', 21))}
+            },
+            completionLimit(){
+                let eff = 10;
+                return eff;
+            }
+        },
+        22: {
+            unlocked(){
+                return hasMilestone('j', 12)
+            },
+            name: "Torned flesh",
+            challengeDescription() {return ("Tiger claw upgrades are useless <br>" + "Completions: " + challengeCompletions('j',22) + "/" + this.completionLimit())},
+            rewardDescription(){
+                return "+0.1 to 'Plantation' cap per every jingu you have (caps at " + this.onComplete() + " jingu). Also /10 tiger claw requirement per completion"
+            },
+            goalDescription(){return format(1e60 * Math.pow(1e6, challengeCompletions('j', 22))) + " bao"},
+            canComplete(){
+               return player.points.gte(1e60 * Math.pow(1e6, challengeCompletions('j', 22)))
+            },
+            onComplete(){return (2 * challengeCompletions('j', 22))},
             completionLimit(){
                 let eff = 10;
                 return eff;
@@ -903,219 +950,231 @@ addLayer("j", {
 }
 )
 
-//UP - JINGU, DOWN - ACHIEVEMENTS
+//UP - JINGU, DOWN - XPERIENCE
 
-addLayer("a", {
+addLayer("TC", {
     startData() { return {                  // startData is a function that returns default data for a layer. 
         unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+        points: new Decimal(0),
+        tigerexp: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+        mult1: new Decimal(1)
     }},
 
-    color: "#f5de18",                       // The color for this layer, which affects many elements.
-    resource: "unlocked achievements",            // The name of this layer's main prestige resource.
-    row: "side",                                 // The row this layer is on (0 is the first row).
-            // The amount of the base needed to  gain 1 of the prestige currency.
-                                            // Also the amount required to unlock the layer.
-    type: "none",                         // Determines the formula used for calculating prestige currency.                          // "normal" prestige gain is (currency^exponent).
+    color: "#00ff54",                       // The color for this layer, which affects many elements.
+    resource: "tiger claw",            // The name of this layer's main prestige resource.
+    row: 1,                                 // The row this layer is on (0 is the first row).
 
-    gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
-        return new Decimal(1)               // Factor in any bonuses multiplying gain here.
+    baseResource: "bao",                 // The name of the resource your prestige gain is based on.
+    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
+
+    requires() {
+        let eff = new Decimal(1e85)
+        if (hasUpgrade('TC', 11)) {eff = eff.div(upgradeEffect('TC', 11))}
+        eff = eff.div(Math.pow(10, challengeCompletions('j',22)))
+        return eff
+    },            // The amount of the base needed to  gain 1 of the prestige currency.
+                                            // Also the amount required to unlock the layer.
+
+    type: "static",                         // Determines the formula used for calculating prestige currency.
+    exponent: 1.66,                          // "normal" prestige gain is (currency^exponent).
+    effect(){
+        let eff = {}
+        eff.first = Math.pow(1.5, player['TC'].best)
+        eff.second = player['TC'].mult1
+        return eff
+    },
+    effectDescription(){
+        return "which provides " + format(tmp['TC'].effect.first) + " tiger experience per second (based on best) and boosts all tiger claw upgrades' multipliers by x" + format(tmp['TC'].effect.second) + "(based on current)"
+    },
+    gainMult() {  
+        let eff = new Decimal(1)                          // Returns your multiplier to your gain of the prestige resource.
+        if (hasUpgrade('TC', 11)) {eff = eff.div(upgradeEffect('TC', 11))}
+        return eff               // Factor in any bonuses multiplying gain here.
     },
     gainExp() {                             // Returns the exponent to your gain of the prestige resource.
         return new Decimal(1)
     },
-    effect(){
-        let eff
-        eff = Math.pow(1.03, player[this.layer].points)
-        return eff
+    layerShown() { return hasUpgrade('j', 25) || player["TC"].points >= 1 },          // Returns a bool for if this layer's node should be visible in the tree.
+    tabFormat: [
+        "main-display",
+        ["prestige-button"],
+        "prestige-button",
+        "blank",
+        ["display-text",
+            function() { return 'You have ' + format(player['TC'].tigerexp) + ' tiger experience' },
+            { "color": "white", "font-size": "16px", "font-family": "Inconsolata" }],
+        "blank",
+        "milestones",
+        "blank",
+        "upgrades"
+    ],
+    update(diff){
+        player['TC'].tigerexp = player['TC'].tigerexp.add(tmp['TC'].effect.first*diff)
+        player['TC'].mult1 = 1 + Math.pow(0.1*player['TC'].points, 2)
     },
-    effectDescription(){
-        return "which multiplies bao gain by " + format(tmp['a'].effect)
-    },
-
-    layerShown() { return true },          // Returns a bool for if this layer's node should be visible in the tree.
-
-    achievements: {
+    upgrades:{
         11: {
-            name: "The story starts...",
-            tooltip: "Buy your first upgrade",
-            done(){
-                return hasUpgrade('p', 11)
+            title: "Cursed treasure",
+            description: "Boosts tiger claw gain and reduces its requirement based on tiger experience",
+            cost: new Decimal(1),
+            effect(){
+                if (!inChallenge('j',22)){
+                let eff
+                eff = Math.pow(player['TC'].tigerexp,0.55)
+                eff *= player['TC'].mult1
+                if (hasUpgrade('TC',21))(eff = Math.pow(eff,upgradeEffect('TC',21)))
+                return eff
+                }
+                else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+                return ('x' + format(this.effect()))
             }
         },
         12: {
-            name: "Back to the fit",
-            tooltip: "Unlock your first buyable",
-            done(){
-                return hasUpgrade('p', 15)
+            title: "Bounty",
+            description: "Boosts '2 is more than 1' based on tiger experience",
+            cost: new Decimal(2),
+            effect(){
+                if (!inChallenge('j',22)){
+                let eff
+                eff = Math.pow(player['TC'].tigerexp,0.33)
+                eff *= player['TC'].mult1
+                return eff
+                }
+                else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+                return ('x' + format(this.effect()))
             }
         },
         13: {
-            name: "On the track",
-            tooltip: "Get 10000 bao",
-            done(){
-                return player.points >= 10000 ? 1 : 0
+            title: "Request timeout error",
+            description: "Boosts 'Hept-up' based on tiger experience",
+            cost: new Decimal(4),
+            effect(){
+                if (!inChallenge('j',22)){
+                let eff, scale = 40
+                if((Math.log(player['TC'].tigerexp) / Math.log(scale)) <= 1) {eff = 1}
+                else {eff = (Math.log(player['TC'].tigerexp) / Math.log(scale))}
+                eff *= player['TC'].mult1
+                return eff
+                }
+                else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+                return ('x' + format(this.effect()))
             }
         },
         14: {
-            name: "Solo",
-            tooltip: "Buy (2,5) upgrade",
-            done(){
-                return hasUpgrade('p', 25)
+            title: "Plantation",
+            description: "Tiger experience increases 'Dry start' reward base(cap at 1)",
+            cost: new Decimal(6),
+            effect(){
+                let eff, scale = 1e3, cap = 1, max = 2 * challengeCompletions('j', 22);
+                if (player['j'].points <= max){cap += 0.1 * player['j'].points} else {cap += 0.1 * max}
+                if (!inChallenge('j',22)){
+                    if((Math.log(player['TC'].tigerexp) / Math.log(scale)) <= 0) {eff = 0}
+                    else if ((Math.log(player['TC'].tigerexp) / Math.log(scale) >= cap)) {eff = cap}
+                    else {eff = (Math.log(player['TC'].tigerexp) / Math.log(scale))}
+                return eff}
+                else {return 0}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+                return ('+' + format(this.effect()))
             }
         },
         15: {
-            name: "You fear is less than before",
-            tooltip: "Get rid of depend of bao in (2,4)",
-            done(){
-                return hasUpgrade('p', 33)
+            title: "There is no limit",
+            description: "Tiger experience multiplies second 'Forbidden techniques' effect",
+            cost: new Decimal(8),
+            effect(){
+                if (!inChallenge('j',22)){
+                let eff = Math.pow(player['TC'].tigerexp, 0.75)
+                eff *= player['TC'].mult1
+                return eff
+                }
+                else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        16: {
-            name: "Three (Six)",
-            tooltip: "Increase (2,1) effect to 3",
-            done(){
-                return tmp['p'].upgrades[21].effect >= 3 ? 1 : 0
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        17: {
-            name: "New mastery is coming...",
-            tooltip: "Unlock second layer",
-            done(){
-                return hasUpgrade('p', 45)
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+                return ('x' + format(this.effect()))
             }
         },
         21: {
-            unlocked(){ return player["a"].points >= 7},
-            name: "New mastery",
-            tooltip: "Get your first jingu mastery",
-            done(){
-                return player['j'].points >= 1
+            unlocked(){ return player['TC'].tigerexp >= 1e5},
+            title: "Beat it",
+            description: "Bring 'Cursed treasure' effect to 1.5th power (applies after second TC bonus)",
+            cost: new Decimal(15),
+            effect(){
+                if (!inChallenge('j',22)){
+                    return 1.5
+                    }
+                    else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
         },
         22: {
-            unlocked(){ return player["a"].points >= 7},
-            name: "Lilflation",
-            tooltip: "Buy first jingu upgrade",
-            done(){
-                return hasUpgrade('j', 11)
+            unlocked(){ return player['TC'].tigerexp >= 1e5},
+            title: "Now it worth",
+            description: "Tiger experience multiplies 'You know it's worthless' cap (caps at 2) (second TC effect doesn't work)",
+            cost: new Decimal(16),
+            effect(){
+                    let eff, scale = 7.5e3, cap = 2
+                if (!inChallenge('j',22)){
+                    if((Math.log(player['TC'].tigerexp) / Math.log(scale)) <= 1) {eff = 1}
+                    else if ((Math.log(player['TC'].tigerexp) / Math.log(scale) >= cap)) {eff = cap}
+                    else {eff = (Math.log(player['TC'].tigerexp) / Math.log(scale))}
+                return eff}
+                else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+                return ('x' + format(this.effect()))
             }
         },
         23: {
-            unlocked(){ return player["a"].points >= 7},
-            name: "Are there idle elements?",
-            tooltip: "Get PP passively",
-            done(){
-                return hasMilestone('j', 3)
+            unlocked(){ return player['TC'].tigerexp >= 1e5},
+            title: "More fever",
+            description: "Tiger experience multiplies jingu layer effect",
+            cost: new Decimal(18),
+            effect(){
+                if (!inChallenge('j',22)){
+                    let eff
+                    eff = Math.pow(player['TC'].tigerexp,0.3)
+                    if (hasUpgrade('TC',21))(eff *= upgradeEffect('TC',21))
+                    eff *= player['TC'].mult1
+                    return eff
+                    }
+                    else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+                return ('x' + format(this.effect()))
             }
         },
         24: {
-            unlocked(){ return player["a"].points >= 7},
-            name: "Closer to pantheon",
-            tooltip: "Unlock your first challenge",
-            done(){
-                return hasMilestone('j', 4)
+            unlocked(){ return player['TC'].tigerexp >= 1e5},
+            title: "1001010100101",
+            description: "Brings 'It could have been abandoned' to power based on tiger experience(cap at 2)",
+            cost: new Decimal(20),
+            effect(){
+                let eff, scale = 5e4, cap = 2
+            if (!inChallenge('j',22)){
+                if((Math.log(player['TC'].tigerexp) / Math.log(scale)) <= 1) {eff = 1}
+                else if ((Math.log(player['TC'].tigerexp) / Math.log(scale) >= cap)) {eff = cap}
+                else {eff = (Math.log(player['TC'].tigerexp) / Math.log(scale))}
+            return eff}
+            else {return 1}
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
+            effectDisplay(){
+            return ('^' + format(this.effect()))
             }
         },
         25: {
-            unlocked(){ return player["a"].points >= 7},
-            name: "Raindrop",
-            tooltip: "Complete your first challenge for the first time",
-            done(){
-                return challengeCompletions('j', 11) >= 1
+            unlocked(){ return player['TC'].tigerexp >= 1e5},
+            title: "Tiger galaxy",
+            description: "Unlocks tiger galaxy(WIP)",
+            cost: new Decimal(23),
+            effect(){
+                return 1
             },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
         },
-        26: {
-            unlocked(){ return player["a"].points >= 7},
-            name: "A bottle of water",
-            tooltip: "Complete your first challenge 5 times",
-            done(){
-                return challengeCompletions('j', 11) >= 5
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        27: {
-            unlocked(){ return player["a"].points >= 7},
-            name: "You know WTF must you do",
-            tooltip: "Unlock your second challenge",
-            done(){
-                return hasMilestone('j', 6)
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        31: {
-            unlocked(){ return player["a"].points >= 14},
-            name: "A broken button",
-            tooltip: "Complete second jingu challenge for the first time",
-            done(){
-                return challengeCompletions('j', 12) >= 1
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        32: {
-            unlocked(){ return player["a"].points >= 14},
-            name: "Repairing",
-            tooltip: "Complete second jingu challenge for the 5 times",
-            done(){
-                return challengeCompletions('j', 12) >= 5
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        33: {
-            unlocked(){ return player["a"].points >= 14},
-            name: "Long dozen",
-            tooltip: "Up 13th jingu mastery",
-            done(){
-                return player['j'].points >= 13
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-    },
+    }
 })
-

@@ -13,27 +13,29 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.1: Jingu Mastery",
+	num: "0.2: Tiger Claw",
 	name: "",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h2>v0.1.3: Jingu Pantheon, pt. III</h2><br>
-		- Last Jingu Pantheon upgrade before brand new layer <br>
-		- Much QoL changes <br>
-		- Jingu layer became larger<br>
-	<h3>What's new in layer</h3><br>
-		- 2 challenges<br>
-		- 3 upgrades<br>
-		- 2 milestones<br>
+	<h2>v0.2: Tiger Claw</h2><br>
+		- Brand new layer - Tiger claw - based on subcurrency - tiger experience <br>
+		- Achievements layer have been deleted - soon new feature will be presented <br>
+		- Massive boosts' rebalance <br>
 	<h3>Balance changes and bugfixes</h3><br>
-		- Fixed bug with fourth buyable visibility <br>
-		- Achievement "Lucky man" deleted due to bugs <br>
-		- Jingu layer: now has base cap at 20 jingu <br>
-		- Jingu milestone 5: now makes PP upgrades (one milestone earlier) and buyables visible(QoL)<br>
-		- Jingu milestone 6: no longer makes upgrades visible, now autobuys PP buyables instead(QoL)<br>
-		- Jingu challenge 2: jingu cap: 1 -> 1.5 per completion (rounded down) <br>
-	<h3>Current endgame: 22 jingu, ~e84 bao</h3>`
+		- Fixed wrong names and descriptions of boosts <br>
+		- Fixed bug with "Fight in octagon" granted +2 to (1,1) base instead of +1.5 <br>
+		- "Triplet": PP gain: +15% -> +33% <br>
+		- "Hexagon": PP gain: 8% -> 10% per upgrade <br>
+		- "Hept-up": formula has changed: log10(x) -> 1 + log12(x) (minimum log effect is still x1)<br>
+		- "Experiment 011": "Hexagon" base multiplier: x2.5 -> x2 <br>
+		- "DLC is $20": now reduces "Hept-up" logarithm base scaling (compensates nerf) <br>
+		- Jingu milestone 2: no longer reduces "Find out your hidden bao" cost scaling, now increases its base by 0.5% per every jingu you have<br>
+		- "Find out your hidden bao": cost scaling was reduced (so former jingu milestone 2 boost is compensated)<br>
+		- Jingu milestone 7: no longer increases "Find out your hidden bao" base, now multiplies "Hept-up" effect by x1.01 per every jingu you have(compounding)<br>
+		- Jingu challenge 3: unlocks at: 18 -> 17 jingu, now mentions in jingu milestone 10
+		- "Afraid of Heights": "Higher to soar..." effect increasing: +0.2 -> +0.25, cap: 20 -> 16 jingu (max effect remained the same)<br>
+	<h3>Current endgame: 23 tiger claws, 28 jingu, ~e117 bao</h3>`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
@@ -62,7 +64,6 @@ function getPointGen() {
 	if (hasUpgrade('p', 22)) {gain = gain.times(upgradeEffect('p', 22))}
 	if (hasUpgrade('p', 24)) {gain = gain.times(upgradeEffect('p', 24))}
 	if (hasUpgrade('p', 25)) {gain = gain.times(upgradeEffect('p', 25))}
-	gain = gain.times(tmp['a'].effect)
 	gain = gain.times(tmp['j'].effect)
 	if(hasUpgrade('j',13)) {gain = gain.times(tmp['j'].upgrades[11].effect.second)}
 	if(hasUpgrade('j',24)) {gain = gain.pow(tmp['j'].upgrades[24].effect.second)}
@@ -80,7 +81,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return (player.points.gte(new Decimal("1e84")))
+	return (player.points.gte(new Decimal("1e94")))
 }
 
 
