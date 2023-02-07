@@ -3,7 +3,7 @@ let modInfo = {
 	id: "Mod #322",
 	author: "fEvarto",
 	pointsName: "bao",
-	modFiles: ["layers.js", "tree.js"],
+	modFiles: ["layers/PP.js", "layers/j.js", "layers/TC.js", "tree.js"],
 
 	discordName: "The Bao Tree",
 	discordLink: "https://discord.gg/wAv6EHtMtf",
@@ -18,24 +18,19 @@ let VERSION = {
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h2>v0.2: Tiger Claw</h2><br>
-		- Brand new layer - Tiger claw - based on subcurrency - tiger experience <br>
-		- Achievements layer have been deleted - soon new feature will be presented <br>
-		- Massive boosts' rebalance <br>
+	<h2>v0.2.1: Tiger Galaxy</h2><br>
+		- New tiger claw layer feature - tiger galaxy <br>
+		- TOOLTIP: all features have been distributed to subtabs <br>
+		- Boosts' rebalance <br>
 	<h3>Balance changes and bugfixes</h3><br>
-		- Fixed wrong names and descriptions of boosts <br>
-		- Fixed bug with "Fight in octagon" granted +2 to (1,1) base instead of +1.5 <br>
-		- "Triplet": PP gain: +15% -> +33% <br>
-		- "Hexagon": PP gain: 8% -> 10% per upgrade <br>
-		- "Hept-up": formula has changed: log10(x) -> 1 + log12(x) (minimum log effect is still x1)<br>
-		- "Experiment 011": "Hexagon" base multiplier: x2.5 -> x2 <br>
-		- "DLC is $20": now reduces "Hept-up" logarithm base scaling (compensates nerf) <br>
-		- Jingu milestone 2: no longer reduces "Find out your hidden bao" cost scaling, now increases its base by 0.5% per every jingu you have<br>
-		- "Find out your hidden bao": cost scaling was reduced (so former jingu milestone 2 boost is compensated)<br>
-		- Jingu milestone 7: no longer increases "Find out your hidden bao" base, now multiplies "Hept-up" effect by x1.01 per every jingu you have(compounding)<br>
-		- Jingu challenge 3: unlocks at: 18 -> 17 jingu, now mentions in jingu milestone 10
-		- "Afraid of Heights": "Higher to soar..." effect increasing: +0.2 -> +0.25, cap: 20 -> 16 jingu (max effect remained the same)<br>
-	<h3>Current endgame: 23 tiger claws, 28 jingu, ~e117 bao</h3>`
+		- Fixed bug with tiger experience gain on 0 TC (other values remained the same) <br>
+		- Fixed wrong endgame (again) <br>
+		- 'Lost opportunities': effect base have been increased: x1.1 -> x1.125 <br>
+		- PP upgrades no longer increases 'Lost opportunities' base <br>
+		- 'Fight in octagon': no longer increases 'You gonna start somewhere' base, now doubles 'Triplet' effect instead <br>
+		- 'Prestige tr14l': no longer reduces 'Practice makes perfect' cost, now adds 14 to both 'Practice makes perfect' and 'You gonna start somewhere' base <br>
+		- Second row of TC upgrades: requires: 100000 -> 20000 to unlock
+	<h3>Current endgame: 56 tiger claws, 48 jingu, up to e280 bao</h3>`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
@@ -54,9 +49,8 @@ function canGenPoints(){
 
 // Calculate points/sec!
 function getPointGen() {
-	if(!canGenPoints())
-		return new Decimal(0)
-	
+	if(!canGenPoints()){return new Decimal(0)}
+	else{
 	let gain = new Decimal(1)
 	if (hasUpgrade('p', 11)) {gain = gain.add(upgradeEffect('p', 11))}
 	if (hasUpgrade('p', 15)) {gain = gain.times(upgradeEffect('p', 15))}
@@ -69,19 +63,22 @@ function getPointGen() {
 	if(hasUpgrade('j',24)) {gain = gain.pow(tmp['j'].upgrades[24].effect.second)}
 	if (hasUpgrade('p', 43)) {gain = gain.pow(upgradeEffect('p', 43))}
 	return gain
+	}
 }
 
 // You can add non-layer related variables that should to into "player" and be saved here, along with default values
 function addedPlayerData() { return {
+
 }}
 
 // Display extra things at the top of the page
 var displayThings = [
+
 ]
 
 // Determines when the game "ends"
 function isEndgame() {
-	return (player.points.gte(new Decimal("1e94")))
+	return (player.points.gte(new Decimal(1e322)))
 }
 
 
