@@ -32,8 +32,8 @@ addLayer("p", {
         else {return new Decimal(1 / (2 + (0.5 * challengeCompletions('j', 13))))}
     },
     passiveGeneration(){
-        let perc = 0.05 * player['j'].points
-        if (hasMilestone('j', 3)){return perc}
+        let perc = new Decimal(0.05 * player['j'].points)
+        if (hasMilestone('j', 3) && player['j'].gain){return perc}
     },
     row: 0, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
@@ -41,11 +41,13 @@ addLayer("p", {
             if (canReset(this.layer)) doReset(this.layer)}},
     ],
     automate(){
-        if (hasMilestone('j', 5)){
-        if (tmp['p'].buyables[11].canAfford && getBuyableAmount('p', 11) < tmp['p'].buyables[11].purchaseLimit){addBuyables('p',11,1 + hasMilestone('j',11))}
-        if (tmp['p'].buyables[12].canAfford && getBuyableAmount('p', 12) < tmp['p'].buyables[12].purchaseLimit){addBuyables('p',12,1 + hasMilestone('j',11))}
-        if (tmp['p'].buyables[13].canAfford && getBuyableAmount('p', 13) < tmp['p'].buyables[13].purchaseLimit){addBuyables('p',13,1 + hasMilestone('j',11))}
-        if (tmp['p'].buyables[14].canAfford && getBuyableAmount('p', 14) < tmp['p'].buyables[14].purchaseLimit){addBuyables('p',14,1 + hasMilestone('j',11))}
+        let mult = 1
+        if (hasMilestone('j',13)) {mult *= 5}
+        if (hasMilestone('j', 5) && player['j'].buy){
+        if (tmp['p'].buyables[11].canAfford && getBuyableAmount('p', 11) < tmp['p'].buyables[11].purchaseLimit){addBuyables('p',11,(1 + hasMilestone('j',11)) * mult)}
+        if (tmp['p'].buyables[12].canAfford && getBuyableAmount('p', 12) < tmp['p'].buyables[12].purchaseLimit){addBuyables('p',12,(1 + hasMilestone('j',11)) * mult)}
+        if (tmp['p'].buyables[13].canAfford && getBuyableAmount('p', 13) < tmp['p'].buyables[13].purchaseLimit){addBuyables('p',13,(1 + hasMilestone('j',11)) * mult)}
+        if (tmp['p'].buyables[14].canAfford && getBuyableAmount('p', 14) < tmp['p'].buyables[14].purchaseLimit){addBuyables('p',14,(1 + hasMilestone('j',11)) * mult)}
         }
     },
     autoUpgrade(){
@@ -107,7 +109,7 @@ addLayer("p", {
                 let mult = {}, add = 0.33
                 mult.first = 1 + add
                 mult.second = 1.5
-                if (hasUpgrade('p',23)) {mult.first *= upgradeEffect('p',23); mult.second *= upgradeEffect('p',23)}
+                if (hasUpgrade('p',23)) {add *= upgradeEffect('p',23); mult.second *= upgradeEffect('p',23)}
                 return mult;
             } 
         },
@@ -159,10 +161,11 @@ addLayer("p", {
                 else {return false}
             },
             title: "Hept-up",
-            description: "Bao gain is increased based on current bao",
+            description(){ if(!shiftDown) {return "Bao gain is increased based on current bao"}
+            else {return "Base formula: log12(x) + 1"}},
             cost: new Decimal(150),
             effect(){
-                let gainbase, scale = 12, base = 1
+                let gainbase = new Decimal(), scale = 12, base = 1
                 if (hasUpgrade('p',45)) {scale -= upgradeEffect('p',45)}
                 if((Math.log(player.points) / Math.log(scale)) <= 1) {gainbase = 1 + base}
                 else {gainbase = (Math.log(player.points) / Math.log(scale)) + base}
@@ -197,10 +200,10 @@ addLayer("p", {
             },
             cost: new Decimal(350),
             effect(){
-                let mult = new Decimal(3)
+                let mult = 3
                 if (hasUpgrade('p', 33)) {mult *= upgradeEffect('p', 33)}
                 if (hasUpgrade('p', 44)) {mult += upgradeEffect('p', 44)}
-                if (player.points <= 1000 && !hasUpgrade('p', 33)) {return mult.sub(1)}
+                if (player.points <= 1000 && !hasUpgrade('p', 33)) {return (mult - 1)}
                 else {return mult}
             },
         },
@@ -234,7 +237,6 @@ addLayer("p", {
                 if (hasUpgrade('p', 34)) {eff.first += 0.2}
                 if (hasUpgrade('p', 35)) {eff.first += 0.2}
                 eff.second = 2
-                if (hasUpgrade('TC',32)){eff.first *= tmp['TC'].upgrades[32].effect.second, eff.second *= tmp['TC'].upgrades[32].effect.second}
                 return eff;
             },
             effectDisplay() { return "-" + format(tmp[this.layer].upgrades[31].effect.first) }
@@ -245,7 +247,8 @@ addLayer("p", {
                 else {return false}
             },
             title: "The Twentieth Slave",
-            description: "x1.5 'You gonna start somewhere' effect, Increases its base based on PP",
+            description(){ if(!shiftDown) {return "x1.5 to 'You gonna start somewhere' effect. Upgrade adds to its base based on PP"}
+            else {return "Base formula: log5(x)"}},
             cost: new Decimal(5e5),
             effect(){
                 let eff = {}

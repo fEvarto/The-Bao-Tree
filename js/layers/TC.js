@@ -3,7 +3,7 @@ addLayer("TC", {
         unlocked: true,                     // You can add more variables here to add them to your layer.
         points: new Decimal(0),
         tigerexp: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
-        tg: new Decimal(0)
+        tg: new Decimal(0),
     }},
 
     color: "#00ff54",                       // The color for this layer, which affects many elements.
@@ -12,7 +12,8 @@ addLayer("TC", {
 
     baseResource: "bao",                 // The name of the resource your prestige gain is based on.
     baseAmount() { return player.points },  // A function to return the current amount of baseResource.
-
+    autoPrestige(){return hasMilestone('j',14) && player['j'].autobuy == true},
+    resetsNothing(){return hasMilestone('j',15)},  
     requires() {
         let eff = new Decimal(1e85)
         if (hasUpgrade('TC', 11)) {eff = eff.div(upgradeEffect('TC', 11))}
@@ -79,7 +80,8 @@ addLayer("TC", {
 upgrades:{
     11: {
         title: "Cursed treasure",
-        description: "Boosts tiger claw gain and reduces its requirement based on tiger experience",
+        description(){ if(!shiftDown) {return "Tiger experience reduces tiger claw requirement and multiplies its gain"}
+            else {return "Base formula: x^0.55"}},
         cost: new Decimal(1),
         effect(){
             if (!inChallenge('j',22)){
@@ -97,7 +99,8 @@ upgrades:{
     },
     12: {
         title: "Bounty",
-        description: "Boosts '2 is more than 1' based on tiger experience",
+        description(){ if(!shiftDown) {return "Tiger experience boosts '2 is more than 1'"}
+            else {return "Base formula: x^0.33"}},
         cost: new Decimal(2),
         effect(){
             if (!inChallenge('j',22)){
@@ -114,7 +117,8 @@ upgrades:{
     },
     13: {
         title: "Request timeout error",
-        description: "Boosts 'Hept-up' based on tiger experience",
+        description(){ if(!shiftDown) {return "Tiger experience boosts 'Hept-up'"}
+            else {return "Base formula: log40(x)"}},
         cost: new Decimal(4),
         effect(){
             if (!inChallenge('j',22)){
@@ -132,7 +136,8 @@ upgrades:{
     },
     14: {
         title: "Plantation",
-        description: "Tiger experience increases 'Dry start' reward base(cap at 1)",
+        description(){ if(!shiftDown) {return "Tiger experience increases 'Dry start' base"}
+            else {return "Base formula: log1000(x) - 1, base cap at 1"}},
         cost: new Decimal(6),
         effect(){
             let eff, scale = 1e3, cap = 1, max = 2 * challengeCompletions('j', 22);
@@ -150,7 +155,8 @@ upgrades:{
     },
     15: {
         title: "There is no limit",
-        description: "Tiger experience multiplies second 'Forbidden techniques' effect",
+        description(){ if(!shiftDown) {return "Boost second 'Forbidden techniques' effect based on tiger experience"}
+            else {return "Base formula: x^0.75"}},
         cost: new Decimal(8),
         effect(){
             if (!inChallenge('j',22)){
@@ -179,7 +185,8 @@ upgrades:{
     22: {
         unlocked(){ return player['TC'].tigerexp >= 2e4},
         title: "Now it worth",
-        description: "Tiger experience multiplies 'You know it's worthless' cap (caps at 2) (second TC effect doesn't work)",
+        description(){ if(!shiftDown) {return "Tiger experience multiplies 'You know it's worthless' effect cap"}
+            else {return "Base formula: log7500(x), base cap at 2, second TC effect doesn't work"}},
         cost: new Decimal(16),
         effect(){
                 let eff, scale = 7.5e3, cap = 2
@@ -198,15 +205,16 @@ upgrades:{
     23: {
         unlocked(){ return player['TC'].tigerexp >= 2e4},
         title: "More fever",
-        description: "Tiger experience multiplies jingu layer effect",
+        description(){ if(!shiftDown) {return "Tiger experience boosts jingu layer effect"}
+            else {return "Base formula: x^(π/10)"}},
         cost: new Decimal(18),
         effect(){
             if (!inChallenge('j',22)){
                 let eff
-                eff = Math.pow(player['TC'].tigerexp,0.3)
+                eff = Math.pow(player['TC'].tigerexp,0.31415926)
                 if (hasUpgrade('TC',21))(eff *= upgradeEffect('TC',21))
                 eff *= tmp['TC'].effect.second
-                if (hasUpgrade('TC',32)){eff = Math.pow(eff, tmp['TC'].upgrades[32].effect.first)}
+                if (hasUpgrade('TC',32)){eff = Math.pow(eff, tmp['TC'].upgrades[32].effect)}
                 return eff
                 }
                 else {return 1}
@@ -218,7 +226,8 @@ upgrades:{
     24: {
         unlocked(){ return player['TC'].tigerexp >= 2e4},
         title: "1001010100101",
-        description: "Brings 'It could have been abandoned' to power based on tiger experience(cap at 2)",
+        description(){ if(!shiftDown) {return "Bring 'It coult have been abandoned' to power based on tiger experience"}
+            else {return "Base formula: log5e4(x), base cap at 2"}},
         cost: new Decimal(20),
         effect(){
             let eff, scale = 5e4, cap = 2
@@ -249,7 +258,8 @@ upgrades:{
         description: "Each upgrade in this row increases first TC effect gain exponent by 0.1",
         cost: new Decimal(28),
         effect(){
-            let eff = 0.1
+            let eff = 0
+            if (hasUpgrade('TC',31)) {eff += 0.1}
             if (hasUpgrade('TC',32)) {eff += 0.1}
             if (hasUpgrade('TC',33)) {eff += 0.1}
             if (hasUpgrade('TC',34)) {eff += 0.1}
@@ -263,22 +273,14 @@ upgrades:{
     32: {
         unlocked(){ return player['TC'].buyables[11] >= 8},
         title: "Fatal disease",
-        description: "Square 'More fever' effect. Tiger experience multiplies 'Experiment 011' effect up to x2",
+        description: "Square 'More fever' effect",
         cost: new Decimal(33),
         effect(){
-            let eff = {}, scale = 1e7, cap = 2
             if (!inChallenge('j',22)){
-            eff.first = 2
-                if((Math.log(player['TC'].tigerexp) / Math.log(scale)) <= 1) {eff.second = 1}
-                else if ((Math.log(player['TC'].tigerexp) / Math.log(scale) >= cap)) {eff.second = cap}
-                else {eff.second = (Math.log(player['TC'].tigerexp) / Math.log(scale))}
-                return eff
+            return 2
             }
-            else {eff.first = 1, eff.second = 1; return eff}
+            else {return 1}
         },
-        effectDisplay(){
-            return ('x' + format(tmp['TC'].upgrades[32].effect.second))
-        }
     },
     33: {
         unlocked(){ return player['TC'].buyables[11] >= 12},
@@ -295,7 +297,8 @@ upgrades:{
     34: {
         unlocked(){ return player['TC'].buyables[11] >= 16},
         title: "80 inches under",
-        description: "Tiger experience boosts 'It isn't working' cap up to x2",
+        description(){ if(!shiftDown) {return "Tiger experience boosts 'It isn't working' effect cap"}
+            else {return "Base formula: log1e10(x), caps at 2"}},
         cost: new Decimal(52),
         effect(){
             let eff, scale = 1e10, cap = 2
@@ -385,6 +388,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
     22: {
         unlocked(){ 
@@ -416,6 +427,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
     23: {
         unlocked(){ 
@@ -447,6 +466,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
     24: {
         unlocked(){ 
@@ -478,6 +505,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
     31: {
         unlocked(){ 
@@ -509,6 +544,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
     32: {
         unlocked(){ 
@@ -540,6 +583,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
     33: {
         unlocked(){ 
@@ -571,6 +622,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
     34: {
         unlocked(){ 
@@ -602,6 +661,14 @@ buyables:{
         purchaseLimit(){
             return 5
         },
+        sellOne(){
+            if (player[this.layer].buyables[this.id] > 0){
+            cost = tmp[this.layer].buyables[this.id].cost
+            player['TC'].tg = player['TC'].tg.add(cost)
+            player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].sub(1)
+            player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.sub(cost)
+            }
+        }
     },
 }
 }

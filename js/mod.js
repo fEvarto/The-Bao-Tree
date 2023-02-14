@@ -18,19 +18,17 @@ let VERSION = {
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h2>v0.2.1: Tiger Galaxy</h2><br>
-		- New tiger claw layer feature - tiger galaxy <br>
-		- TOOLTIP: all features have been distributed to subtabs <br>
-		- Boosts' rebalance <br>
-	<h3>Balance changes and bugfixes</h3><br>
-		- Fixed bug with tiger experience gain on 0 TC (other values remained the same) <br>
-		- Fixed wrong endgame (again) <br>
-		- 'Lost opportunities': effect base have been increased: x1.1 -> x1.125 <br>
-		- PP upgrades no longer increases 'Lost opportunities' base <br>
-		- 'Fight in octagon': no longer increases 'You gonna start somewhere' base, now doubles 'Triplet' effect instead <br>
-		- 'Prestige tr14l': no longer reduces 'Practice makes perfect' cost, now adds 14 to both 'Practice makes perfect' and 'You gonna start somewhere' base <br>
-		- Second row of TC upgrades: requires: 100000 -> 20000 to unlock
-	<h3>Current endgame: 56 tiger claws, 48 jingu, up to e280 bao</h3>`
+	<h2>v0.2.1b: Tiger Galaxy: QoL</h2><br>
+	- Fixed NaN - due to this second 'Fatal disease' effect have been removed, but 'More fever' formula became slightly better <br>
+	- Description of first effect of 'CSP-032' have been fixed <br>
+	- QoL: now you can sell buyables in tiger galaxy tab <br>
+	- QoL: now you can press SHIFT to learn formulae or nuances of boost.'Cause of technical issues it available only in upgrades, but soon it will be fixed <br>
+	- QoL: added jingu milestone that fastens PP buyables' autobuy <br>
+	- QoL: added jingu milestone that autobuys jingu and tiger claw <br>
+	- QoL: added jingu milestone that allows jingu and tiger claw to reset nothing <br>
+	- QoL: all automations and passive gain milestones now have a toggle <br>
+	- Added new theme <br>
+	<h3>Current endgame: the same as v0.2.1a... Maybe</h3>`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 

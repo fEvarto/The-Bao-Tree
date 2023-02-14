@@ -2,7 +2,10 @@ addLayer("j", {
     
     startData() { return {                  // startData is a function that returns default data for a layer. 
         unlocked: false,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
+        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer
+        gain: false,
+        buy: false,
+        autobuy: false
     }},
 
     color: "#ff4400",                       // The color for this layer, which affects many elements.
@@ -20,7 +23,9 @@ addLayer("j", {
     type: "static",                         
     exponent(){
         return Math.pow(1.33, x)
-    },                          
+    },
+    autoPrestige(){return (hasMilestone('j',14) && player['j'].autobuy == true)},
+    resetsNothing(){return hasMilestone('j',15)},                  
     tabFormat: {
         "Milestones": {
             content: [
@@ -28,7 +33,8 @@ addLayer("j", {
                 ["prestige-button"],
                 "prestige-button",
                 "blank",
-                "milestones"
+                "milestones",
+                ["toggles", ['j', "gain"], ['j','buy'],['j','autobuy']],
                 ],
         
         },
@@ -67,7 +73,7 @@ addLayer("j", {
         }
     },
     effectDescription(){
-        return "which multiplies bao gain by " + format(tmp['j'].effect) + " (base cap at 20 jingu)"
+        return "which multiplies bao gain by " + format(tmp['j'].effect)
     },
 
     gainMult() {      
@@ -104,6 +110,9 @@ addLayer("j", {
             requirementDescription: "6 jingu masteries",
             effectDescription: "Gain 5% of prestige point gain every second per every jingu you have",
             done() { return player["j"].points >= 6 },
+            toggles:[
+                ['j','gain'],
+            ]
         },
         4: {
             unlocked(){ return hasMilestone('j',2)},
@@ -116,6 +125,9 @@ addLayer("j", {
             requirementDescription: "10 jingu masteries",
             effectDescription: "Autobuys PP buyables (autobuyer considers cost as requirement). Increases cap of PP buyables by 2 per every jingu you have (caps at 25)",
             done() { return player["j"].points >= 10 },
+            toggles:[
+                ['j','buy'],
+            ]
         },
         6: {
             unlocked(){ return hasMilestone('j',2)},
@@ -153,11 +165,33 @@ addLayer("j", {
             effectDescription: "Unlocks fifth jingu challenge",
             done() { return (player["j"].points >= 24 && player['TC'].points >= 11) },
         },
+        13: {
+            unlocked(){ return player["j"].points >= 25},
+            requirementDescription: "30 jingu masteries",
+            effectDescription: "x5 PP autobuy speed",
+            done() { return player["j"].points >= 30 },
+        },
+        14: {
+            unlocked(){ return player["j"].points >= 30},
+            requirementDescription: "40 jingu masteries",
+            effectDescription: "Autobuy jingu and tiger claw",
+            done() { return player["j"].points >= 40 },
+            toggles:[
+                ['j','autobuy']
+            ],
+        },
+        15: {
+            unlocked(){ return player["j"].points >= 40},
+            requirementDescription: "50 jingu masteries",
+            effectDescription: "Jingu and tiger claw reset nothing",
+            done() { return player["j"].points >= 50 },
+        },
     },
     upgrades:{
         11: {
             title: "New mastery",
-            description: "Multiplies PP gain per every jingu you have (caps at 10 jingu)",
+            description(){ if(!shiftDown) {return "Multiplies PP gain per every jingu you have"}
+            else {return "Boost base and base cap is 10"}},
             cost: new Decimal(3),
             effect(){
                 let eff = {}, base = 10, max = 10, max2 = 10, current = player['j'].points, max3 = Math.floor(1.6 * challengeCompletions('j', 13)), current3 = player['j'].points
@@ -206,7 +240,8 @@ addLayer("j", {
         14: {
             unlocked(){ return hasMilestone('j',2)},
             title: "Fever",
-            description: "Increases jingu effect base by 0.07 per every jingu you have (caps at 10 jingu)",
+            description(){ if(!shiftDown) {return "Increases jingu layer effect per every jingu you have"}
+            else {return "Base cap at 10 jingu, upgrade base is +0.07"}},
             cost: new Decimal(9),
             effect(){
                 let eff = 0.07
@@ -217,7 +252,8 @@ addLayer("j", {
         15: {
             unlocked(){ return hasMilestone('j',2)},
             title: "Higher to soar - harder to fall",
-            description: "Increases '19? Yes' effect per every jingu you have",
+            description(){ if(!shiftDown) {return "Increases '19? Yes' effect per every jingu you have"}
+            else {return "Provides additive bonus"}},
             cost: new Decimal(11),
             effect(){
                 let eff = 1, max = 16, current = player['j'].points
@@ -266,7 +302,8 @@ addLayer("j", {
         24: {
             unlocked(){ return hasMilestone('j',7)},
             title: "CSP-032",
-            description: "+1 to jingu effect cap per every 4 jingu you have, ^1.001 bao gain per every jingu you have (additive and uncapped)",
+            description(){ if (!shiftDown){ return "+1 to jingu milestone 10 cap per every 4 jingu you have, ^1.001 bao gain per every jingu you have"}
+            else {return 'Second effect is uncapped and scales additively'}},
             cost: new Decimal(21),
             effect(){
                 let eff = {}; let threshold = 4
@@ -339,7 +376,7 @@ addLayer("j", {
         },
         13: {
             unlocked(){
-                return player['j'].best >= 18
+                return hasMilestone('j',9)
             },
             name: "Ouch, it's painful",
             challengeDescription() {return ("PP gain is in " + format(2+ (0.5 * challengeCompletions('j',13))) +"th root\n\ Completions: " + challengeCompletions('j',13) + "/" + this.completionLimit())},
