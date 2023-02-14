@@ -1,5 +1,5 @@
 // ************ Themes ************
-var themes = ["default", "aqua"]
+var themes = ["default", "aqua", "valentine"]
 
 var colors = {
 	default: {
@@ -21,6 +21,16 @@ var colors = {
 		locked: "#c4a7b3",
 		background: "#001f3f",
 		background_tooltip: "rgba(0, 15, 31, 0.75)",
+	},
+	valentine: {
+		1: "#d88ed8",
+		2: "#8fa7bf",
+		3: "#5f6f7f",
+		color: "#d88ed8",
+		points: "#d6b5d6",
+		locked: "#c4a7b3",
+		background: "#450046",
+		background_tooltip: "rgba(60, 5, 62, 0.75)",
 	},
 }
 function changeTheme() {
@@ -44,7 +54,6 @@ function switchTheme() {
 	else {
 		index ++;
 		options.theme = themes[index];
-		options.theme = themes[1];
 	}
 	changeTheme();
 	resizeCanvas();

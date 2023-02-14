@@ -8,9 +8,8 @@ addLayer("p", {
     }},
     color: "#A61384",
     requires(){
-        gain = new Decimal(1)
-        gain = 5
-        if (hasUpgrade('p', 14)) (gain -= upgradeEffect('p', 14))
+        let gain = new Decimal(5)
+        if (hasUpgrade('p', 14)) (gain -= tmp[this.layer].upgrades[14].effect.first)
         if (hasUpgrade('p', 31)) (gain -= tmp[this.layer].upgrades[31].effect.first)
         return gain
     }, // Can be a function that takes requirement increases into account
@@ -23,15 +22,38 @@ addLayer("p", {
         mult = new Decimal(1)
         if (hasUpgrade("p", 13)) {mult = mult.times(tmp['p'].upgrades[13].effect.first)}
         if (hasUpgrade('p', 21)) mult = mult.times(upgradeEffect('p', 21))
+        if (hasUpgrade("j", 11)) {mult = mult.times(tmp['j'].upgrades[11].effect.first)}
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
+        if (!inChallenge('j', 13)){
         return new Decimal(1)
+        }
+        else {return new Decimal(1 / (2 + (0.5 * challengeCompletions('j', 13))))}
+    },
+    passiveGeneration(){
+        let perc = new Decimal(0.05 * player['j'].points)
+        if (hasMilestone('j', 3) && player['j'].gain){return perc}
     },
     row: 0, // Row the layer is in on the tree (0 is the first row)
     hotkeys: [
-        {key: "p", description: "P: Reset for prestige points", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
+        {key: "p", description: "P: Reset for prestige points", onPress(){
+            if (canReset(this.layer)) doReset(this.layer)}},
     ],
+    automate(){
+        let mult = 1
+        if (hasMilestone('j',13)) {mult *= 5}
+        if (hasMilestone('j', 5) && player['j'].buy){
+        if (tmp['p'].buyables[11].canAfford && getBuyableAmount('p', 11) < tmp['p'].buyables[11].purchaseLimit){addBuyables('p',11,(1 + hasMilestone('j',11)) * mult)}
+        if (tmp['p'].buyables[12].canAfford && getBuyableAmount('p', 12) < tmp['p'].buyables[12].purchaseLimit){addBuyables('p',12,(1 + hasMilestone('j',11)) * mult)}
+        if (tmp['p'].buyables[13].canAfford && getBuyableAmount('p', 13) < tmp['p'].buyables[13].purchaseLimit){addBuyables('p',13,(1 + hasMilestone('j',11)) * mult)}
+        if (tmp['p'].buyables[14].canAfford && getBuyableAmount('p', 14) < tmp['p'].buyables[14].purchaseLimit){addBuyables('p',14,(1 + hasMilestone('j',11)) * mult)}
+        }
+    },
+    autoUpgrade(){
+        if (hasMilestone('j', 11)) {return true}
+        else {return false}
+    },
     layerShown(){return true},
 
     upgrades: {
@@ -42,8 +64,10 @@ addLayer("p", {
             },
             cost: new Decimal(1),
             effect(){
+                if (!inChallenge('j', 11)){
                 let gainAdd = 0, gainBase = 1
-                if (hasUpgrade("p", 23)) {gainBase += tmp[this.layer].upgrades[23].effect.second}
+                if (hasUpgrade("p", 14)) {gainBase += tmp[this.layer].upgrades[14].effect.second}
+                if (hasUpgrade("p", 34)) {gainBase += tmp[this.layer].upgrades[34].effect}
                 if (hasUpgrade("p", 32)) {gainBase += tmp[this.layer].upgrades[32].effect.second}
                 gainBase += buyableEffect('p', 12) //buyable p, 12 boost gainbase
                 if (hasUpgrade("p", 11)) {gainAdd += gainBase}
@@ -55,35 +79,49 @@ addLayer("p", {
                 {gainAdd *= buyableEffect("p", 13)} //buyable p, 13
                 if (hasUpgrade("p", 13)) {gainAdd *= tmp[this.layer].upgrades[13].effect.second}
                 if (hasUpgrade("p", 32)) {gainAdd *= tmp[this.layer].upgrades[32].effect.first}
+                gainAdd = Math.pow(gainAdd, buyableEffect('TC',33))
                 return gainAdd
+                }
+                else {return 1}
             },
             effectDisplay() { return "+" + format(this.effect()) }
         },
         12: {
             title: "2 is more than 1",
-            description: "Multiplies previous effect by 2",
+            description: "Multiplies previous effect",
             cost: new Decimal(6),
             effect(){
-                return 2;
-            } 
+                let eff = 2, max = 20, current = player['j'].points
+                if (current >= max) {current = max}
+                if (hasMilestone('j', 7)){eff = 2 * Math.pow(1.5, current)}
+                if (hasUpgrade('TC', 12)) {eff *= upgradeEffect('TC',12)}
+                return eff;
+            },
+            effectDisplay(){
+                return "x" + format(this.effect())
+            }
         },
         13: {
             title: "Triplet",
-            description: "+15% prestige point gain, x1.5 effect of (1, 1)",
+            description: "+33% prestige point gain, x1.5 effect of 'You gonna start somewhere'",
             cost: new Decimal(18),
             effect(){
-                let mult = {}
-                mult.first = 1.15
+                let mult = {}, add = 0.33
+                mult.first = 1 + add
                 mult.second = 1.5
+                if (hasUpgrade('p',23)) {add *= upgradeEffect('p',23); mult.second *= upgradeEffect('p',23)}
                 return mult;
             } 
         },
         14: {
             title: "Quadcicle",
-            description: "-1 base bao requirement to prestige points",
+            description: "-1 base bao requirement to prestige points, +0.25 'You gonna start somewhere' base",
             cost: new Decimal(30),
             effect(){
-                return 1
+                let mult = {}
+                mult.first = 1
+                mult.second = 0.25
+                return mult;
             } 
         },
         15: {
@@ -98,14 +136,14 @@ addLayer("p", {
         },
         21: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Hexagon",
             description: "Each upgrade in this row additively increases prestige point gain",
             cost: new Decimal(100),
             effect(){
-                let gainAdd = 1, gainBase = 0.08
+                let gainAdd = 1, gainBase = 0.1
                 if (hasUpgrade("p", 31)) {gainBase *= tmp[this.layer].upgrades[31].effect.second}
                 if (hasUpgrade("p", 21)) {gainAdd += gainBase}
                 if (hasUpgrade("p", 22)) {gainAdd += gainBase}
@@ -119,39 +157,40 @@ addLayer("p", {
         },
         22: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Hept-up",
-            description: "Bao gain is increased based on current bao",
+            description(){ if(!shiftDown) {return "Bao gain is increased based on current bao"}
+            else {return "Base formula: log12(x) + 1"}},
             cost: new Decimal(150),
             effect(){
-                let gainbase, scale = 10
-                if (hasUpgrade('p', 44)) {scale -= upgradeEffect('p', 44)}
-                if((Math.log(player.points) / Math.log(scale)) <= 1) {gainbase = 1}
-                else {gainbase = Math.log(player.points) / Math.log(scale)}
+                let gainbase = new Decimal(), scale = 12, base = 1
+                if (hasUpgrade('p',45)) {scale -= upgradeEffect('p',45)}
+                if((Math.log(player.points) / Math.log(scale)) <= 1) {gainbase = 1 + base}
+                else {gainbase = (Math.log(player.points) / Math.log(scale)) + base}
+                if (hasMilestone('j',6)){gainbase *= Math.pow(1.01, player['j'].points)}
+                if (hasUpgrade('TC',13)){gainbase *= upgradeEffect('TC', 13)}
                 return gainbase
             },
             effectDisplay() { return format(this.effect()) + "x" }
         },
         23: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Fight in octagon",
-            description: "+0.01 buyable base, +2 base of (1,1)",
+            description: "Doubles 'Triplet' effect",
             cost: new Decimal(250),
             effect(){
-                let mult = {}
-                mult.first = 0.01
-                mult.second = 2
+                let mult = 2
                 return mult;
             },
         },
         24: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Leon Kirilin",
@@ -164,13 +203,13 @@ addLayer("p", {
                 let mult = 3
                 if (hasUpgrade('p', 33)) {mult *= upgradeEffect('p', 33)}
                 if (hasUpgrade('p', 44)) {mult += upgradeEffect('p', 44)}
-                if(player.points <= 1000 && hasUpgrade('p', 33 == 0)) {return mult.sub(1)}
+                if (player.points <= 1000 && !hasUpgrade('p', 33)) {return (mult - 1)}
                 else {return mult}
             },
         },
         25: {
             unlocked(){ 
-                if (getBuyableAmount('p', 11) >= 5) {return true}
+                if (getBuyableAmount('p', 11) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Ten eSportsmen",
@@ -178,17 +217,16 @@ addLayer("p", {
             cost: new Decimal(500),
             effect(){
                 let eff = 3.22
-                if (hasUpgrade('p', 44)) {eff += upgradeEffect('p', 44)}
                 return eff;
             },
         },
         31: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Experiment 011",
-            description: "Each upgrade in this row reduces bao requirement by 0.2. Also x2.5 (2,1) base",
+            description: "Each upgrade in this row reduces bao requirement by 0.2. Also x2 'Hexagon' base",
             cost: new Decimal(100000),
             effect(){
                 let eff = {} 
@@ -198,35 +236,45 @@ addLayer("p", {
                 if (hasUpgrade('p', 33)) {eff.first += 0.2}
                 if (hasUpgrade('p', 34)) {eff.first += 0.2}
                 if (hasUpgrade('p', 35)) {eff.first += 0.2}
-                eff.second = 2.5
+                eff.second = 2
                 return eff;
             },
             effectDisplay() { return "-" + format(tmp[this.layer].upgrades[31].effect.first) }
         },
         32: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
-            title: "'The Twelve' - Aleksandr Blok",
-            description: "x1.5 (1,1) effect, Increases (1,1) base based on prestige points",
+            title: "The Twentieth Slave",
+            description(){ if(!shiftDown) {return "x1.5 to 'You gonna start somewhere' effect. Upgrade adds to its base based on PP"}
+            else {return "Base formula: log5(x)"}},
             cost: new Decimal(5e5),
             effect(){
                 let eff = {}
                 eff.first = 1.5
                 if((Math.log(player[this.layer].points) / Math.log(5)) <= 1) {eff.second = 1}
-                else {eff.second = Math.log(player[this.layer].points) / Math.log(2)}
+                else {
+                    let max = 2 * challengeCompletions('j', 11);
+                    if (!hasUpgrade('TC',14)){
+                    if (player['j'].points < max) {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2, player['j'].points)}
+                    else {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2, max)}}
+                    else{
+                        if (player['j'].points < max) {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2 + upgradeEffect('TC',14), player['j'].points)}
+                        else {eff.second = (Math.log(player[this.layer].points) / Math.log(2)) * Math.pow(2 + upgradeEffect('TC',14), max)}
+                    }
+                }
                 return eff;
             },
-            effectDisplay() { return format(tmp[this.layer].upgrades[32].effect.second) }
+            effectDisplay() { return "+" + format(tmp[this.layer].upgrades[32].effect.second) }
         },
         33: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Unknown thirteenth",
-            description: "x2 (2,4) multiplier, (2,4) no longer depends on current bao",
+            description: "x2 'Leon Kirilin' multiplier, it no longer depends on current bao",
             cost: new Decimal(1.5e6),
             effect(){
                 let eff
@@ -236,22 +284,20 @@ addLayer("p", {
         },
         34: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Prestige tr14l",
-            description: "+0.01 first buyable base, x0.85 second buyable cost",
+            description: "+14 to both 'You gonna start somewhere' and 'Practice makes perfect' base",
             cost: new Decimal(2.5e6),
             effect(){
-                let eff = {}
-                eff.first = 0.01
-                eff.second = 0.85
+                let eff = 14
                 return eff;
             },
         },
         35: {
             unlocked(){ 
-                if (getBuyableAmount('p', 12) >= 5) {return true}
+                if (getBuyableAmount('p', 12) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "F15herman",
@@ -263,34 +309,39 @@ addLayer("p", {
         },
         41: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "x = 16",
             description: "Each upgrade in this row increases max buyables level by 10",
             cost: new Decimal(1e8),
             effect(){
-                return 10;
+                let eff = 10
+                if (hasUpgrade('p', 42)) {eff += 10}
+                if (hasUpgrade('p', 43)) {eff += 10}
+                if (hasUpgrade('p', 44)) {eff += 10}
+                if (hasUpgrade('p', 45)) {eff += 10}
+                return eff;
             },
         },
         42: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Chance of applying - 17%",
-            description: "Double third buyable effect, second buyable scales 40% better",
+            description: "x1.5 'Find out your hidden bao' effect, 'Practice makes perfect' scales 50% better",
             cost: new Decimal(2.5e8),
             effect(){
                 let eff = {}
-                eff.first = 2
-                eff.second = 0.1
+                eff.first = 1.5
+                eff.second = 0.15
                 return eff;
             },
         },
         43: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "18 causes to rob the bank",
@@ -302,45 +353,55 @@ addLayer("p", {
         },
         44: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "19? Yes",
-            description: "+1 to bao gain multiplier in prestige upgrades, (2,2) scales better",
+            description: "Increases bao gain multiplier in prestige upgrades",
             cost: new Decimal(1e11),
             effect(){
-                return 1;
+                if (!hasUpgrade('j',15)){return 2;}
+                else {return 2 + (upgradeEffect('j',15) * player['j'].points)}
             },
+            effectDisplay(){
+                return "+" + format(this.effect())
+            }
         },
         45: {
             unlocked(){ 
-                if (getBuyableAmount('p', 13) >= 5) {return true}
+                if (getBuyableAmount('p', 13) >= 5 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "DLC is 20$",
-            description: "Unlocks new layer (WIP)",
+            description: "Reduces 'Hept-up' logarithm scaling base. Unlocks new layer",
             cost: new Decimal(5e11),
             effect(){
-                return 1;
-            },
+                return 2;
+            }
         },
     },
-    buyables: {
+    buyables:{
         11: {
             unlocked(){ 
-                if (hasUpgrade('p', 15) == 1) {return true}
+                if (hasUpgrade('p', 15) == 1 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Lost opportunities", // Optional, displayed at the top in a larger font
             cost(x) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                let cost = new Decimal(20 * Math.pow(1.1, x))
+                let cost, baseCoeff = 1.1
+                if (inChallenge('j',21)) {baseCoeff *= 2} 
+                cost = new Decimal(20 * Math.pow(baseCoeff, x))
                 return cost
             },
             effect(x) { // Effects of owning x of the items, x is a decimal
-                gainBase = 1.1
-                if (hasUpgrade("p", 23)) {gainBase += tmp[this.layer].upgrades[23].effect.first}
-                if (hasUpgrade("p", 34)) {gainBase += tmp[this.layer].upgrades[34].effect.first}
-                return Decimal.pow(gainBase, x);
+                if (!inChallenge('j',12)){
+                let eff, gainBase = 1.125, softcap = 1e8
+                gainBase += buyableEffect('TC',22)
+                eff = Decimal.pow(gainBase, x)
+                eff *= buyableEffect("p", 14);
+                return eff
+                }
+                else {return 1}
             },
             display() { // Everything else displayed in the buyable button after the title
                 let data = tmp[this.layer].buyables[this.id]
@@ -358,33 +419,44 @@ addLayer("p", {
                 player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost) // This is a built-in system that you can use for respeccing but it only works with a single Decimal value
             },
             purchaseLimit(){
-                let gain = 100
+                let gain = 100, max = 25
                 if (hasUpgrade('p', 35)) {gain += upgradeEffect('p', 35)}
                 if (hasUpgrade('p', 41)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 42)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 43)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 44)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 45)) {gain += upgradeEffect('p', 41)}
+                if (hasMilestone('j', 5)) {
+                    if (player['j'].points < max) {gain += 2 * player['j'].points}
+                    else {gain += 2 * max}
+                }
+                gain += buyableEffect('TC', 34)
                 return gain
             },
         },
         12: {
             unlocked(){ 
-                if (hasUpgrade('p', 25) == 1) {return true}
+                if (hasUpgrade('p', 25) == 1 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Practice makes perfect", // Optional, displayed at the top in a larger font
             cost(x) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                let baseCost = 250
-                if (hasUpgrade("p", 34)) {gainBase *= tmp[this.layer].upgrades[34].effect.second}
-                let cost = new Decimal(baseCost * Math.pow(1.15, x))
+                let baseCost = 250, baseCoeff = 1.15
+                if (inChallenge('j',21)) {baseCoeff *= 2}
+                let cost = new Decimal(baseCost * Math.pow(baseCoeff, x))
                 return cost
             },
             effect(x) { // Effects of owning x of the items, x is a decimal
-                let eff, coeff1 = 1.25
-                if (hasUpgrade('p', 42)) {coeff1 += tmp["p"].upgrades[42].effect.second}
+                if (!inChallenge('j',12)){
+                let eff, coeff1 = 1.3, max, current = player['j'].points
+                if (hasUpgrade('TC',34)) {max = Math.floor(1.5 * challengeCompletions('j', 12) * upgradeEffect('TC',34))}
+                else {max = Math.floor(1.5 * challengeCompletions('j', 12))}
+                if (current >= max) {current = max}
+                exp = 1.1 + (0.02 * current)
+                if (hasUpgrade('p', 42)) {coeff1 += tmp[this.layer].upgrades[42].effect.second}
                 eff = Math.pow(0.5 * x, coeff1) + 1 * x
+                if (hasUpgrade('p',34)) {eff += upgradeEffect('p',34)}
+                if (hasMilestone("j", 0)) {eff *= Math.pow(exp, player['j'].points)};
+                eff *= buyableEffect("p", 14);
                 return eff;
+                }
+                else {return 0}
             },
             display() { // Everything else displayed in the buyable button after the title
                 let data = tmp[this.layer].buyables[this.id]
@@ -402,32 +474,39 @@ addLayer("p", {
                 player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost) // This is a built-in system that you can use for respeccing but it only works with a single Decimal value
             },
             purchaseLimit(){
-                gain = 100
+                gain = 100, max = 25
                 if (hasUpgrade('p', 35)) {gain += upgradeEffect('p', 35)}
                 if (hasUpgrade('p', 41)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 42)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 43)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 44)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 45)) {gain += upgradeEffect('p', 41)}
+                if (hasMilestone('j', 5)) {
+                    if (player['j'].points < max) {gain += 2 * player['j'].points}
+                    else {gain += 2 * max}
+                }
+                gain += buyableEffect('TC', 34)
                 return gain
             },
         },
         13: {
             unlocked(){ 
-                if (hasUpgrade('p', 35) == 1) {return true}
+                if (hasUpgrade('p', 35) == 1 || hasMilestone('j', 4)) {return true}
                 else {return false}
             },
             title: "Find out your hidden bao", // Optional, displayed at the top in a larger font
             cost(x) { // cost for buying xth buyable, can be an object if there are multiple currencies
-                let baseCost = 1e7
-                let cost = new Decimal(baseCost * Math.pow(1.25, x))
+                let baseCost = 1e7, baseCoeff = new Decimal(1.2)
+                if (inChallenge('j',21)) {baseCoeff *= 2} 
+                let cost = new Decimal(baseCost * Math.pow(baseCoeff, x))
                 return cost
             },
             effect(x) { // Effects of owning x of the items, x is a decimal
-                let eff, coeff1 = 1
-                if (hasUpgrade('p', 42)) {coeff1 *= tmp["p"].upgrades[42].effect.first}
-                eff = 1 + (0.01 * coeff1 * x)
+                if (!inChallenge('j',12)){
+                let eff; let coeff1 = 1
+                if (hasUpgrade('p', 42)) {coeff1 *= tmp[this.layer].upgrades[42].effect.first}
+                if (!hasMilestone('j',1)){eff = 1 + (0.02 * coeff1 * x)}
+                else {eff = 1 + (((0.02 + (0.005 * player['j'].points)) * coeff1 * x))}
+                if (eff != 1) {eff *= buyableEffect("p", 14);}
                 return eff;
+                }
+                else {return 1}
             },
             display() { // Everything else displayed in the buyable button after the title
                 let data = tmp[this.layer].buyables[this.id]
@@ -445,164 +524,68 @@ addLayer("p", {
                 player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost) // This is a built-in system that you can use for respeccing but it only works with a single Decimal value
             },
             purchaseLimit(){
-                gain = 100
+                gain = 100, max = 25
                 if (hasUpgrade('p', 35)) {gain += upgradeEffect('p', 35)}
                 if (hasUpgrade('p', 41)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 42)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 43)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 44)) {gain += upgradeEffect('p', 41)}
-                if (hasUpgrade('p', 45)) {gain += upgradeEffect('p', 41)}
+                if (hasMilestone('j', 5)) {
+                    if (player['j'].points < max) {gain += 2 * player['j'].points}
+                    else {gain += 2 * max}
+                }
+                gain += buyableEffect('TC', 34)
+                return gain
+            },
+        },
+        14: {
+            unlocked(){ 
+                if (hasUpgrade('j', 21)) {return true}
+                else {return false}
+            },
+            title: "It could have been abandonded", // Optional, displayed at the top in a larger font
+            cost(x) { // cost for buying xth buyable, can be an object if there are multiple currencies
+                let baseCost = 1e25, baseCoeff = new Decimal(1.3)
+                if (inChallenge('j',21)) {baseCoeff *= 2} 
+                let cost = new Decimal(baseCost * Math.pow(baseCoeff, x))
+                return cost
+            },
+            effect(x) { // Effects of owning x of the items, x is a decimal
+                if (!hasUpgrade('TC',22)){max = Math.floor(1.5 * challengeCompletions('j', 21))}
+                else {max = Math.floor(1.5 * challengeCompletions('j', 21) * upgradeEffect('TC',22))}
+                if (!inChallenge('j',12)){
+                    current = player['j'].points
+                    if (current >= max) {current = max}
+                    let eff, gainBase = 1.02
+                    gainBase += (0.001 * current)
+                    eff = Decimal.pow(gainBase, x)
+                    if (hasUpgrade('TC',24))(eff = Math.pow(eff, upgradeEffect('TC', 24)))
+                    return eff
+                    }
+                    else {return 1}
+            },
+            display() { // Everything else displayed in the buyable button after the title
+                let data = tmp[this.layer].buyables[this.id]
+                return "Cost: " + format(data.cost) + " prestige points\n\
+                Amount: " + player[this.layer].buyables[this.id] + "/" + format(data.purchaseLimit) + "\n\
+                x" + format(data.effect) + " previous buyables effect"
+            },
+            canAfford() {
+                return player[this.layer].points.gte(tmp[this.layer].buyables[this.id].cost)},
+            buy() { 
+                cost = tmp[this.layer].buyables[this.id].cost
+                player[this.layer].points = player[this.layer].points.sub(cost)	
+                player[this.layer].buyables[this.id] = player[this.layer].buyables[this.id].add(1)
+                player[this.layer].spentOnBuyables = player[this.layer].spentOnBuyables.add(cost) // This is a built-in system that you can use for respeccing but it only works with a single Decimal value
+            },
+            purchaseLimit(){
+                gain = 100, max = 25
+                if (hasUpgrade('p', 35)) {gain += upgradeEffect('p', 35)}
+                if (hasUpgrade('p', 41)) {gain += upgradeEffect('p', 41)}
+                if (hasMilestone('j', 5)) {
+                    if (player['j'].points < max) {gain += 2 * player['j'].points}
+                    else {gain += 2 * max}
+                }
+                gain += buyableEffect('TC', 34)
                 return gain
             },
         },
     },
 })
-
-//UP - PRESTIGE, DOWN - JINGU
-
-addLayer("j", {
-    startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: false,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
-    }},
-
-    color: "#ff4400",                       // The color for this layer, which affects many elements.
-    resource: "jingu mastery",            // The name of this layer's main prestige resource.
-    row: 1,                                 // The row this layer is on (0 is the first row).
-
-    baseResource: "bao",                 // The name of the resource your prestige gain is based on.
-    baseAmount() { return player.points },  // A function to return the current amount of baseResource.
-
-    requires: new Decimal(1e22),              // The amount of the base needed to  gain 1 of the prestige currency.
-                                            // Also the amount required to unlock the layer.
-
-    type: "static",                         // Determines the formula used for calculating prestige currency.
-    exponent: 0.3,                          // "normal" prestige gain is (currency^exponent).
-
-    effect(){
-        return Math.pow(1.3, player['j'].points)
-    },
-    effectDescription(){
-        return "which multiplies bao gain by " + format(tmp['j'].effect)
-    },
-
-    gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
-        return new Decimal(1)               // Factor in any bonuses multiplying gain here.
-    },
-    gainExp() {                             // Returns the exponent to your gain of the prestige resource.
-        return new Decimal(1)
-    },
-
-    layerShown() { return hasUpgrade('p', 45) && player.points >= 1e100 },          // Returns a bool for if this layer's node should be visible in the tree.
-
-    upgrades: {
-        // Look in the upgrades docs to see what goes here!
-    },
-})
-
-//UP - JINGU, DOWN - ACHIEVEMENTS
-
-addLayer("a", {
-    startData() { return {                  // startData is a function that returns default data for a layer. 
-        unlocked: true,                     // You can add more variables here to add them to your layer.
-        points: new Decimal(0),             // "points" is the internal name for the main resource of the layer.
-    }},
-
-    color: "#f5de18",                       // The color for this layer, which affects many elements.
-    resource: "unlocked achievements",            // The name of this layer's main prestige resource.
-    row: "side",                                 // The row this layer is on (0 is the first row).
-            // The amount of the base needed to  gain 1 of the prestige currency.
-                                            // Also the amount required to unlock the layer.
-    type: "none",                         // Determines the formula used for calculating prestige currency.                          // "normal" prestige gain is (currency^exponent).
-
-    gainMult() {                            // Returns your multiplier to your gain of the prestige resource.
-        return new Decimal(1)               // Factor in any bonuses multiplying gain here.
-    },
-    gainExp() {                             // Returns the exponent to your gain of the prestige resource.
-        return new Decimal(1)
-    },
-    effect(){
-        let eff
-        eff = Math.pow(1.03, player[this.layer].points)
-        return eff
-    },
-    effectDescription(){
-        return "which multiplies bao gain by " + format(tmp['a'].effect)
-    },
-
-    layerShown() { return true },          // Returns a bool for if this layer's node should be visible in the tree.
-
-    achievements: {
-        11: {
-            name: "The story starts...",
-            tooltip: "Buy your first upgrade",
-            done(){
-                return hasUpgrade('p', 11)
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        12: {
-            name: "Back to the fit",
-            tooltip: "Unlock your first buyable",
-            done(){
-                return hasUpgrade('p', 15)
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        13: {
-            name: "On the track",
-            tooltip: "Get 10000 bao",
-            done(){
-                return player.points >= 10000 ? 1 : 0
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        14: {
-            name: "Solo",
-            tooltip: "Buy (2,5) upgrade",
-            done(){
-                return hasUpgrade('p', 25)
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        15: {
-            name: "Conjuring your weaknesses",
-            tooltip: "Get rid of depend of bao in (2,4)",
-            done(){
-                return hasUpgrade('p', 33)
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        16: {
-            name: "Sixth",
-            tooltip: "Increase (2,1) effect to 3",
-            done(){
-                return tmp['p'].upgrades[21].effect >= 3 ? 1 : 0
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-        17: {
-            name: "New mastery",
-            tooltip: "Unlock second layer (now WIP)",
-            done(){
-                return hasUpgrade('p', 45)
-            },
-            onComplete(){
-                player["a"].points = player["a"].points.add(1)
-            }
-        },
-    },
-})
-
